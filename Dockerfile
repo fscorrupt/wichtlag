@@ -3,13 +3,19 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependency definitions
+# Install native build tools for compiling better-sqlite3 on Alpine
+RUN apk add --no-cache python3 make g++
+
+# Copy dependency definitions and install all modules
 COPY package*.json ./
 RUN npm ci
 
-# Copy source code and build client bundle
+# Copy source files and build client bundle
 COPY . .
 RUN npm run build
+
+# Prune devDependencies to keep only production modules with compiled binaries
+RUN npm prune --omit=dev
 
 # Production runtime stage (Hardened & Rootless)
 FROM node:22-alpine AS runner
@@ -20,11 +26,12 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV DATA_DIR=/app/data
 
-# Install production dependencies only
-COPY package*.json ./
-RUN npm ci --omit=dev
+# Ensure runtime C++ library is present for compiled native modules
+RUN apk add --no-cache libstdc++
 
-# Copy built frontend dist and server code
+# Copy production node_modules from builder (no build tools needed in runner)
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server ./server
 COPY --from=builder /app/public ./public
