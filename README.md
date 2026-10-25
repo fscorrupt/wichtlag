@@ -1,7 +1,5 @@
-# WichtlAG
-
 <p align="center">
-  <img src="public/logo.png" alt="WichtlAG Logo" width="140" />
+  <img src="public/logo.png" alt="WichtlAG Logo" width="240" />
 </p>
 
 Eine selbstgehostete Wichtel-Web-App (Secret Santa), die komplett ohne E-Mail-Server auskommt. Alles läuft über Links und Token. Der Admin kann zu keinem Zeitpunkt einsehen, wer wen gezogen hat.
