@@ -16,7 +16,7 @@ export default function EventCreate({ onCreated }) {
   const [isUploadingBanner, setIsUploadingBanner] = useState(false);
 
   // Participants
-  const [names, setNames] = useState(['Anna', 'Ben', 'Clara', 'David']);
+  const [names, setNames] = useState([]);
   const [nameInput, setNameInput] = useState('');
 
   // Exclusions: [{ giver_name, receiver_name }]
@@ -388,42 +388,48 @@ export default function EventCreate({ onCreated }) {
         </div>
 
         {/* Name Chips Grid */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {names.map((name) => (
-            <div
-              key={name}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '6px 12px',
-                background: 'var(--surface-2)',
-                border: '1px solid var(--surface-border)',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '0.9rem',
-                fontWeight: '600'
-              }}
-            >
-              <span>{name}</span>
-              <button
-                type="button"
-                onClick={() => handleRemoveName(name)}
+        {names.length > 0 ? (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            {names.map((name) => (
+              <div
+                key={name}
                 style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-muted)',
-                  cursor: 'pointer',
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  padding: '2px'
+                  gap: '8px',
+                  padding: '6px 12px',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--surface-border)',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '0.9rem',
+                  fontWeight: '600'
                 }}
-                title="Entfernen"
               >
-                <Trash2 size={14} color="#f87171" />
-              </button>
-            </div>
-          ))}
-        </div>
+                <span>{name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveName(name)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '2px'
+                  }}
+                  title="Entfernen"
+                >
+                  <Trash2 size={14} color="#f87171" />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+            Noch keine Teilnehmer eingetragen. Gib oben einen Namen ein und klicke auf "Hinzufügen".
+          </p>
+        )}
       </div>
 
       {/* 4. Ausschlüsse definieren */}
