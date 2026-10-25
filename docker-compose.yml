@@ -1,0 +1,25 @@
+services:
+  wichtlag:
+    build: .
+    container_name: wichtlag
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - DATA_DIR=/app/data
+      - NODE_ENV=production
+    # Hardening: Read-only root filesystem prevents any modification to the container OS
+    read_only: true
+    # Drop all Linux capabilities to eliminate privilege escalation risks
+    cap_drop:
+      - ALL
+    # Prevent child processes from gaining additional privileges
+    security_opt:
+      - no-new-privileges:true
+    # In-memory temporary directory (noexec prevents running any uploaded/temp scripts)
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    # Persistent storage ONLY for SQLite database and uploaded images
+    volumes:
+      - ./data:/app/data
