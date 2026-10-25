@@ -6,6 +6,8 @@
 
 Eine selbstgehostete Wichtel-Web-App (Secret Santa), die komplett ohne E-Mail-Server auskommt. Alles läuft über Links und Token. Der Admin kann zu keinem Zeitpunkt einsehen, wer wen gezogen hat.
 
+![preview](https://github.com/fscorrupt/wichtlag/blob/main/sneak-peek.gif)
+
 ## Features
 
 - **Rein linkbasiert:** Kein SMTP oder Mail-Server nötig. Einladungslink oder QR-Code genügt.
