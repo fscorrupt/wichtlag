@@ -310,7 +310,8 @@ export default function EventCreate({ onCreated }) {
               : bannerUrl.startsWith('/uploads/')
               ? `url(${bannerUrl}) center/cover no-repeat`
               : 'var(--surface-2)',
-            height: '140px',
+            minHeight: '140px',
+            height: 'auto',
             marginBottom: '16px'
           }}
         >

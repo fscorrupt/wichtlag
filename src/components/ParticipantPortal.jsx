@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Calendar, Euro, CheckCircle2, AlertCircle, Copy, Check, ExternalLink,
-  Sparkles, Heart, Gift, Upload, Save, User, Lock, ArrowLeft
+  Sparkles, Heart, Gift, Upload, Save, User, Lock, ArrowLeft, Bookmark
 } from 'lucide-react';
 import { BANNER_PRESETS, formatDate, AVATAR_PRESETS } from '../constants/presets';
 import confetti from 'canvas-confetti';
@@ -166,8 +166,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             ? selectedBanner.background
             : event.banner_url && event.banner_url.startsWith('/uploads/')
             ? `url(${event.banner_url}) center/cover no-repeat`
-            : 'var(--surface-2)',
-          height: '160px'
+            : 'var(--surface-2)'
         }}
       >
         <div className="banner-overlay" />
@@ -176,7 +175,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white' }}>
               Hallo {participant.name}! 👋
             </span>
-            {event.is_drawn && (
+            {Boolean(event.is_drawn) && (
               <span className="badge" style={{ background: '#10b981', color: 'white' }}>
                 🎉 Ausgelost
               </span>
@@ -193,7 +192,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
       </div>
 
       {/* SECRET REVEAL SECTION IF DRAWN */}
-      {event.is_drawn && target && (
+      {Boolean(event.is_drawn) && target ? (
         <div className="glass-card" style={{ marginBottom: '28px', border: '2px solid var(--accent-gold)' }}>
           {!isRevealed ? (
             <div className="reveal-wrapper">
@@ -291,10 +290,10 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             </div>
           )}
         </div>
-      )}
+      ) : null}
 
       {/* Waiting banner if NOT drawn yet */}
-      {!event.is_drawn && (
+      {!event.is_drawn ? (
         <div style={{
           background: 'rgba(56, 189, 248, 0.1)',
           border: '1px solid rgba(56, 189, 248, 0.3)',
@@ -313,21 +312,91 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             </span>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* Personal Bookmark Link */}
-      <div className="glass-card" style={{ padding: '20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div>
-            <strong style={{ display: 'block', fontSize: '0.95rem' }}>Dein persönlicher Zugangslink</strong>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              Speichere dieses Lesezeichen, um jederzeit von jedem Gerät zurückzukehren.
-            </span>
+      {/* Prominent Personal Bookmark Link */}
+      <div
+        className="glass-card"
+        style={{
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.08) 100%)',
+          border: '2px solid #f59e0b',
+          boxShadow: '0 0 28px rgba(245, 158, 11, 0.22)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '24px',
+          marginBottom: '28px'
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+            <div style={{
+              width: '46px',
+              height: '46px',
+              borderRadius: '12px',
+              background: 'rgba(245, 158, 11, 0.2)',
+              border: '1px solid rgba(245, 158, 11, 0.4)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              marginTop: '2px'
+            }}>
+              <Bookmark size={24} color="#fbbf24" />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                <span className="badge" style={{ background: '#f59e0b', color: '#1e1302', fontWeight: 800, padding: '3px 8px' }}>
+                  WICHTIG
+                </span>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#ffffff', letterSpacing: '-0.01em' }}>
+                  Dein persönlicher Zugangslink
+                </h3>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.92rem', color: '#fef08a' }}>
+                Speichere dieses Lesezeichen, um jederzeit von jedem Gerät zurückzukehren.
+              </p>
+            </div>
           </div>
-          <button type="button" className="btn btn-secondary btn-sm" onClick={handleCopyLink}>
-            {copiedLink ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+
+          <button
+            type="button"
+            className="btn btn-gold btn-lg"
+            onClick={handleCopyLink}
+            style={{ padding: '10px 22px', fontSize: '0.98rem' }}
+          >
+            {copiedLink ? <Check size={18} color="#1e1302" /> : <Copy size={18} />}
             <span>{copiedLink ? 'Link kopiert!' : 'Link kopieren'}</span>
           </button>
+        </div>
+
+        {/* Visual Link Box with 1-click select */}
+        <div
+          onClick={handleCopyLink}
+          style={{
+            background: 'rgba(10, 14, 23, 0.85)',
+            border: '1px solid rgba(245, 158, 11, 0.35)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            cursor: 'pointer'
+          }}
+          title="Klicken zum Kopieren"
+        >
+          <span style={{
+            fontFamily: 'monospace',
+            fontSize: '0.9rem',
+            color: '#fef3c7',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {typeof window !== 'undefined' ? window.location.href : ''}
+          </span>
+          <span style={{ fontSize: '0.82rem', color: copiedLink ? '#34d399' : 'var(--accent-gold)', whiteSpace: 'nowrap', fontWeight: 700 }}>
+            {copiedLink ? '✓ Kopiert' : 'Klick = Kopieren'}
+          </span>
         </div>
       </div>
 
