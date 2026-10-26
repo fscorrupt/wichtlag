@@ -62,6 +62,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
     setError('');
 
     try {
+      const isEventDrawn = Boolean(data?.event?.is_drawn);
       const res = await fetch(`/api/events/${eventId}/me?token=${token}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -69,7 +70,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           avatar_url: avatarUrl,
           wishlist_text: wishlistText,
           wishlist_url: wishlistUrl,
-          is_ready: isReady
+          is_ready: isEventDrawn ? true : isReady
         })
       });
 
@@ -77,8 +78,19 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         throw new Error('Fehler beim Speichern.');
       }
 
+      setData((prev) => prev ? ({
+        ...prev,
+        participant: {
+          ...prev.participant,
+          avatar_url: avatarUrl,
+          wishlist_text: wishlistText,
+          wishlist_url: wishlistUrl,
+          is_ready: isEventDrawn ? true : isReady
+        }
+      }) : prev);
+
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      setTimeout(() => setSaveSuccess(false), 3500);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -257,10 +269,14 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                 textAlign: 'left',
                 marginBottom: '20px'
               }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', fontSize: '1.1rem' }}>
-                  <Heart size={18} color="#ef4444" />
-                  <span>Wunschzettel von {target.name}:</span>
-                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+                    Wunschzettel von {target.name}:
+                  </h3>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                    Live-Aktualisierung
+                  </span>
+                </div>
 
                 {target.wishlist_text ? (
                   <p style={{ whiteSpace: 'pre-wrap', color: 'var(--text-main)', fontSize: '0.95rem', margin: 0 }}>
@@ -268,7 +284,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                   </p>
                 ) : (
                   <p style={{ fontStyle: 'italic', color: 'var(--text-muted)', margin: 0 }}>
-                    {target.name} hat noch keine Wünsche eingetragen.
+                    {target.name} hat noch keine Wünsche eingetragen. Schau später noch einmal vorbei – Änderungen werden hier automatisch sichtbar!
                   </p>
                 )}
 
@@ -299,18 +315,12 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           border: '1px solid rgba(56, 189, 248, 0.3)',
           borderRadius: 'var(--radius-md)',
           padding: '16px 20px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
+          marginBottom: '24px'
         }}>
-          <Sparkles size={24} color="#38bdf8" style={{ flexShrink: 0 }} />
-          <div>
-            <strong style={{ color: 'white', display: 'block' }}>Die Auslosung hat noch nicht begonnen.</strong>
-            <span style={{ fontSize: '0.85rem', color: '#bae6fd' }}>
-              Fülle deinen Wunschzettel aus und setze deinen Haken auf "Bereit". Sobald der Admin die Auslosung startet, erfährst du hier, wen du beschenkst!
-            </span>
-          </div>
+          <strong style={{ color: 'white', display: 'block', marginBottom: '4px' }}>Die Auslosung hat noch nicht begonnen.</strong>
+          <span style={{ fontSize: '0.85rem', color: '#bae6fd' }}>
+            Fülle deinen Wunschzettel aus und setze deinen Haken auf "Bereit". Sobald der Admin die Auslosung startet, erfährst du hier, wen du beschenkst!
+          </span>
         </div>
       ) : null}
 
@@ -395,14 +405,35 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             {typeof window !== 'undefined' ? window.location.href : ''}
           </span>
           <span style={{ fontSize: '0.82rem', color: copiedLink ? '#34d399' : 'var(--accent-gold)', whiteSpace: 'nowrap', fontWeight: 700 }}>
-            {copiedLink ? '✓ Kopiert' : 'Klick = Kopieren'}
+            {copiedLink ? 'Kopiert' : 'Klick = Kopieren'}
           </span>
         </div>
       </div>
 
       {/* Profile & Wishlist Editor */}
       <form onSubmit={handleSave} className="glass-card">
-        <h2 style={{ marginBottom: '16px' }}>Dein Profil & Wunschzettel</h2>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
+          <h2 style={{ margin: 0 }}>Dein Profil & Wunschzettel</h2>
+          {Boolean(event.is_drawn) && (
+            <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
+              Jederzeit anpassbar
+            </span>
+          )}
+        </div>
+
+        {Boolean(event.is_drawn) && (
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.08)',
+            border: '1px solid rgba(16, 185, 129, 0.25)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 16px',
+            marginBottom: '20px',
+            fontSize: '0.88rem',
+            color: '#a7f3d0'
+          }}>
+            <strong>Hinweis:</strong> Du kannst deine Wünsche oder Links jederzeit bis zur Bescherung anpassen oder ergänzen. Dein Wichtel sieht deine Änderungen direkt.
+          </div>
+        )}
 
         {saveSuccess && (
           <div style={{
@@ -417,7 +448,11 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             gap: '8px'
           }}>
             <CheckCircle2 size={18} />
-            <span>Wunschzettel erfolgreich gespeichert!</span>
+            <span>
+              {event.is_drawn
+                ? 'Wunschzettel erfolgreich aktualisiert! Dein Wichtel sieht deine Änderungen direkt.'
+                : 'Wunschzettel erfolgreich gespeichert!'}
+            </span>
           </div>
         )}
 
@@ -450,7 +485,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
               />
             </label>
             {avatarUrl.startsWith('/uploads/') && (
-              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ Eigenes Bild aktiv</span>
+              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>Eigenes Bild aktiv</span>
             )}
           </div>
         </div>
@@ -480,37 +515,45 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           <span className="form-hint">Egal ob Amazon, Wunschliste.de oder Notion – füge einfach den Link ein.</span>
         </div>
 
-        {/* Ready Checkbox */}
-        <div style={{
-          background: 'rgba(10, 14, 23, 0.5)',
-          border: '1px solid var(--surface-border)',
-          borderRadius: 'var(--radius-md)',
-          padding: '16px',
-          marginBottom: '20px'
-        }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={isReady}
-              onChange={(e) => setIsReady(e.target.checked)}
-              style={{ width: '20px', height: '20px', accentColor: 'var(--accent-emerald)', cursor: 'pointer' }}
-            />
-            <div>
-              <strong style={{ color: 'white', display: 'block', fontSize: '0.95rem' }}>
-                Ich bin fertig & bereit für die Auslosung!
-              </strong>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                Signalisiert dem Admin, dass dein Wunschzettel vollständig ist.
-              </span>
-            </div>
-          </label>
-        </div>
+        {/* Ready Checkbox (nur vor der Auslosung relevant) */}
+        {!event.is_drawn && (
+          <div style={{
+            background: 'rgba(10, 14, 23, 0.5)',
+            border: '1px solid var(--surface-border)',
+            borderRadius: 'var(--radius-md)',
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={isReady}
+                onChange={(e) => setIsReady(e.target.checked)}
+                style={{ width: '20px', height: '20px', accentColor: 'var(--accent-emerald)', cursor: 'pointer' }}
+              />
+              <div>
+                <strong style={{ color: 'white', display: 'block', fontSize: '0.95rem' }}>
+                  Ich bin fertig & bereit für die Auslosung!
+                </strong>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Signalisiert dem Admin, dass dein Wunschzettel vollständig ist.
+                </span>
+              </div>
+            </label>
+          </div>
+        )}
 
         {/* Save Button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <button type="submit" className="btn btn-primary" disabled={saving}>
             <Save size={16} />
-            <span>{saving ? 'Speichere...' : 'Änderungen speichern'}</span>
+            <span>
+              {saving
+                ? 'Speichere...'
+                : event.is_drawn
+                ? 'Wunschzettel jetzt aktualisieren'
+                : 'Änderungen speichern'}
+            </span>
           </button>
         </div>
       </form>

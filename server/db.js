@@ -53,6 +53,7 @@ db.exec(`
     wishlist_text TEXT,
     wishlist_url TEXT,
     is_ready INTEGER DEFAULT 0,
+    wishlist_updated_at TEXT,
     target_participant_id TEXT,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE,
@@ -70,5 +71,12 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_participants_event ON participants(event_id);
   CREATE INDEX IF NOT EXISTS idx_exclusions_event ON exclusions(event_id);
 `);
+
+// Safe migrations for existing databases
+try {
+  db.exec(`ALTER TABLE participants ADD COLUMN wishlist_updated_at TEXT`);
+} catch (e) {
+  // column already exists
+}
 
 export { db, DATA_DIR, UPLOADS_DIR };

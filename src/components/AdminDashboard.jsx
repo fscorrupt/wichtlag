@@ -53,12 +53,12 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
   const handleStartDraw = async () => {
     if (!data?.stats.allReady) {
       const confirmForce = window.confirm(
-        'Nicht alle Teilnehmer haben ihren Wunschzettel als fertig markiert. Möchtest du die Auslosung trotzdem jetzt starten?'
+        'Nicht alle Teilnehmer haben ihren Wunschzettel als fertig markiert. Möchtest du die Auslosung trotzdem jetzt starten?\n\n(Hinweis: Alle Teilnehmer können ihre Wunschzettel auch nach der Auslosung weiterhin jederzeit ausfüllen und anpassen!)'
       );
       if (!confirmForce) return;
     } else {
       const confirmNormal = window.confirm(
-        'Möchtest du das Wichteln jetzt auslosen? Nach der Auslosung können keine weiteren Teilnehmer hinzugefügt oder Ausschlüsse geändert werden.'
+        'Möchtest du das Wichteln jetzt auslosen? Nach der Auslosung können keine weiteren Teilnehmer hinzugefügt oder Ausschlüsse geändert werden.\n\n(Hinweis: Wunschzettel können von allen Teilnehmern auch nach der Auslosung weiterhin jederzeit angepasst werden.)'
       );
       if (!confirmNormal) return;
     }
@@ -272,9 +272,9 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
             </h2>
             <p style={{ margin: 0 }}>
               {event.is_drawn
-                ? 'Jeder Teilnehmer kann ab sofort mit seinem Link sein gezogenes Wichtelkind einsehen.'
+                ? 'Jeder Teilnehmer kann ab sofort mit seinem Link sein gezogenes Wichtelkind einsehen. Wunschzettel können weiterhin jederzeit angepasst werden!'
                 : stats.allReady
-                ? '🎉 Alle Teilnehmer sind beigetreten und haben ihren Wunschzettel fertig ausgefüllt!'
+                ? 'Alle Teilnehmer sind beigetreten und haben ihren Wunschzettel ausgefüllt.'
                 : `Warte auf Teilnehmer: ${stats.readyCount} von ${stats.totalCount} bereit.`}
             </p>
           </div>
@@ -320,14 +320,10 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
         border: '1px solid rgba(251, 191, 36, 0.25)',
         borderRadius: 'var(--radius-md)',
         padding: '14px 18px',
-        marginBottom: '24px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px'
+        marginBottom: '24px'
       }}>
-        <Lock size={20} color="#fbbf24" style={{ flexShrink: 0 }} />
         <span style={{ fontSize: '0.85rem', color: '#fef3c7' }}>
-          <strong>Absolute Admin-Privatsphäre:</strong> Du siehst hier als Admin nur den Status (wer beigetreten ist und wer fertig ist). Auch nach der Auslosung kannst weder du noch sonst jemand einsehen, wer wen beschenkt.
+          <strong>Admin-Privatsphäre:</strong> Du siehst hier als Admin nur den Status (wer beigetreten ist und wer fertig ist). Auch nach der Auslosung kannst weder du noch sonst jemand einsehen, wer wen beschenkt.
         </span>
       </div>
 
@@ -382,12 +378,31 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  {p.is_ready ? (
-                    <span className="badge badge-ready">✓ Bereit</span>
+                  {event.is_drawn ? (
+                    p.has_wishlist ? (
+                      <span className="badge badge-ready">Wunschzettel vorhanden</span>
+                    ) : (
+                      <span className="badge badge-empty">Noch keine Wünsche</span>
+                    )
+                  ) : p.is_ready ? (
+                    <span className="badge badge-ready">Bereit</span>
                   ) : p.is_claimed ? (
                     <span className="badge badge-pending">Wunschzettel unvollständig</span>
                   ) : (
                     <span className="badge badge-empty">Noch offen</span>
+                  )}
+
+                  {p.is_claimed === 1 && p.participant_token && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => handleCopy(`${window.location.origin}/event/${eventId}/me?token=${p.participant_token}`, `p_${p.id}`)}
+                      title={`Zugangslink für ${p.name} kopieren (falls verloren)`}
+                      style={{ padding: '4px 9px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                    >
+                      {copiedLink === `p_${p.id}` ? <Check size={13} color="#10b981" /> : <Copy size={13} />}
+                      <span>{copiedLink === `p_${p.id}` ? 'Kopiert!' : 'Link'}</span>
+                    </button>
                   )}
                 </div>
               </div>
@@ -423,8 +438,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       {/* Auto-Deletion Notice & Danger Zone */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '16px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-          <Clock size={16} />
+        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
           <span>Diese Aktion wird automatisch 14 Tage nach dem Aktionsdatum ({formatDate(event.event_date)}) gelöscht.</span>
         </div>
 

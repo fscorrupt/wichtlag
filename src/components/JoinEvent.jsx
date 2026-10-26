@@ -10,6 +10,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedParticipant, setSelectedParticipant] = useState(null);
+  const [claimedInfoModal, setClaimedInfoModal] = useState(null);
   const [claiming, setClaiming] = useState(false);
 
   // Check if participant already has a saved token for this event
@@ -133,14 +134,11 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
           flexWrap: 'wrap',
           gap: '12px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <UserCheck size={24} color="#10b981" />
-            <div>
-              <strong style={{ color: 'white', display: 'block' }}>Du nimmst bereits an dieser Aktion teil!</strong>
-              <span style={{ fontSize: '0.85rem', color: '#a7f3d0' }}>
-                Dein Zugang wurde auf diesem Gerät gespeichert.
-              </span>
-            </div>
+          <div>
+            <strong style={{ color: 'white', display: 'block' }}>Du nimmst bereits an dieser Aktion teil!</strong>
+            <span style={{ fontSize: '0.85rem', color: '#a7f3d0' }}>
+              Dein Zugang wurde auf diesem Gerät gespeichert.
+            </span>
           </div>
           <button
             type="button"
@@ -191,7 +189,18 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
               <div
                 key={p.id}
                 className={`name-card ${isClaimed ? 'claimed' : ''}`}
-                onClick={() => !isClaimed && setSelectedParticipant(p)}
+                onClick={() => {
+                  if (isClaimed) {
+                    if (existingToken) {
+                      onNavigateToPortal(existingToken);
+                    } else {
+                      setClaimedInfoModal(p);
+                    }
+                  } else {
+                    setSelectedParticipant(p);
+                  }
+                }}
+                style={{ cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{
@@ -222,7 +231,24 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                   </div>
                 </div>
 
-                {!isClaimed && (
+                {isClaimed ? (
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    style={{ marginTop: '4px', width: '100%', fontSize: '0.78rem' }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (existingToken) {
+                        onNavigateToPortal(existingToken);
+                      } else {
+                        setClaimedInfoModal(p);
+                      }
+                    }}
+                  >
+                    <span>{existingToken ? 'Zu meinem Wunschzettel' : 'Zugang öffnen'}</span>
+                    <ArrowRight size={13} />
+                  </button>
+                ) : (
                   <button
                     type="button"
                     className="btn btn-secondary btn-sm"
@@ -242,20 +268,6 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
       {selectedParticipant && (
         <div className="modal-overlay" onClick={() => setSelectedParticipant(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
-            <div style={{
-              width: '60px',
-              height: '60px',
-              borderRadius: 'var(--radius-full)',
-              background: 'rgba(239, 68, 68, 0.15)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              margin: '0 auto 16px auto',
-              fontSize: '28px'
-            }}>
-              🎁
-            </div>
-
             <h3 style={{ marginBottom: '8px' }}>Bist du wirklich {selectedParticipant.name}?</h3>
             <p style={{ fontSize: '0.9rem', marginBottom: '20px' }}>
               Sobald du diesen Namen wählst, ist er für andere gesperrt. Im nächsten Schritt kannst du deinen Wunschzettel ausfüllen und ein Profilbild wählen.
@@ -280,6 +292,39 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                 <ArrowRight size={16} />
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Claimed Notice Modal */}
+      {claimedInfoModal && (
+        <div className="modal-overlay" onClick={() => setClaimedInfoModal(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
+            <h3 style={{ marginBottom: '8px' }}>{claimedInfoModal.name} ist bereits beigetreten</h3>
+            <p style={{ fontSize: '0.9rem', marginBottom: '16px', color: 'var(--text-secondary)' }}>
+              Um deinen Wunschzettel zu bearbeiten oder dein Wichtelkind einzusehen, nutze bitte deinen persönlichen Zugangslink (aus deinen Browser-Lesezeichen oder WhatsApp).
+            </p>
+            <div style={{
+              background: 'rgba(10, 14, 23, 0.5)',
+              border: '1px solid var(--surface-border)',
+              borderRadius: 'var(--radius-md)',
+              padding: '12px',
+              marginBottom: '20px',
+              fontSize: '0.82rem',
+              color: 'var(--text-muted)',
+              textAlign: 'left'
+            }}>
+              <strong>Tipp:</strong> Falls du deinen Link nicht mehr findest, kann dir der Organisator deinen persönlichen Link im Admin-Bereich mit einem Klick neu kopieren und schicken.
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+              onClick={() => setClaimedInfoModal(null)}
+            >
+              Verstanden
+            </button>
           </div>
         </div>
       )}

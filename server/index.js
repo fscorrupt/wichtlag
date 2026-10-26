@@ -257,7 +257,7 @@ app.get('/api/events/:id/me', (req, res) => {
     }
 
     const participant = db.prepare(`
-      SELECT id, name, avatar_url, wishlist_text, wishlist_url, is_ready, target_participant_id
+      SELECT id, name, avatar_url, wishlist_text, wishlist_url, wishlist_updated_at, is_ready, target_participant_id
       FROM participants
       WHERE event_id = ? AND participant_token = ?
     `).get(eventId, token);
@@ -270,7 +270,7 @@ app.get('/api/events/:id/me', (req, res) => {
     let target = null;
     if (event.is_drawn === 1 && participant.target_participant_id) {
       const recipient = db.prepare(`
-        SELECT name, avatar_url, wishlist_text, wishlist_url
+        SELECT name, avatar_url, wishlist_text, wishlist_url, wishlist_updated_at
         FROM participants
         WHERE id = ?
       `).get(participant.target_participant_id);
@@ -280,7 +280,8 @@ app.get('/api/events/:id/me', (req, res) => {
           name: recipient.name,
           avatar_url: recipient.avatar_url,
           wishlist_text: recipient.wishlist_text,
-          wishlist_url: recipient.wishlist_url
+          wishlist_url: recipient.wishlist_url,
+          wishlist_updated_at: recipient.wishlist_updated_at
         };
       }
     }
@@ -293,6 +294,7 @@ app.get('/api/events/:id/me', (req, res) => {
         avatar_url: participant.avatar_url,
         wishlist_text: participant.wishlist_text,
         wishlist_url: participant.wishlist_url,
+        wishlist_updated_at: participant.wishlist_updated_at,
         is_ready: participant.is_ready === 1
       },
       target
@@ -305,6 +307,7 @@ app.get('/api/events/:id/me', (req, res) => {
 
 /**
  * Participant updates their own profile & wishlist
+ * Works both before and after the draw!
  */
 app.put('/api/events/:id/me', (req, res) => {
   try {
@@ -316,6 +319,11 @@ app.put('/api/events/:id/me', (req, res) => {
       return res.status(401).json({ error: 'Kein Teilnehmer-Token.' });
     }
 
+    const event = db.prepare(`SELECT is_drawn FROM events WHERE id = ?`).get(eventId);
+    if (!event) {
+      return res.status(404).json({ error: 'Aktion nicht gefunden.' });
+    }
+
     const participant = db.prepare(`
       SELECT id FROM participants WHERE event_id = ? AND participant_token = ?
     `).get(eventId, token);
@@ -324,22 +332,25 @@ app.put('/api/events/:id/me', (req, res) => {
       return res.status(403).json({ error: 'Ungültiger Zugang.' });
     }
 
+    const finalReady = event.is_drawn === 1 ? 1 : (is_ready ? 1 : 0);
+
     db.prepare(`
       UPDATE participants
       SET avatar_url = COALESCE(?, avatar_url),
           wishlist_text = ?,
           wishlist_url = ?,
+          wishlist_updated_at = CURRENT_TIMESTAMP,
           is_ready = ?
       WHERE id = ?
     `).run(
       avatar_url !== undefined ? avatar_url : null,
       wishlist_text !== undefined ? wishlist_text.trim() : '',
       wishlist_url !== undefined ? wishlist_url.trim() : '',
-      is_ready ? 1 : 0,
+      finalReady,
       participant.id
     );
 
-    res.json({ success: true, is_ready: !!is_ready });
+    res.json({ success: true, is_ready: finalReady === 1 });
   } catch (err) {
     console.error('Fehler beim Aktualisieren des Wunschzettels:', err);
     res.status(500).json({ error: 'Fehler beim Speichern.' });
@@ -348,7 +359,8 @@ app.put('/api/events/:id/me', (req, res) => {
 
 /**
  * Admin Dashboard View
- * STRICT PRIVACY: Admin CANNOT see target assignments or other participants' private tokens!
+ * STRICT PRIVACY: Admin CANNOT see target assignments!
+ * Allows admin to copy participant personal links if a participant lost access.
  */
 app.get('/api/events/:id/admin', (req, res) => {
   try {
@@ -368,9 +380,9 @@ app.get('/api/events/:id/admin', (req, res) => {
       return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
     }
 
-    // Fetch participants without sensitive pairings
+    // Fetch participants with tokens so admin can share personal link if a participant lost access
     const participants = db.prepare(`
-      SELECT id, name, is_claimed, avatar_url, is_ready,
+      SELECT id, name, is_claimed, participant_token, avatar_url, is_ready,
              CASE WHEN (wishlist_text IS NOT NULL AND length(wishlist_text) > 0)
                     OR (wishlist_url IS NOT NULL AND length(wishlist_url) > 0)
                   THEN 1 ELSE 0 END AS has_wishlist
