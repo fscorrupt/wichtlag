@@ -379,7 +379,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
             <h3 style={{ marginBottom: '8px' }}>{claimedInfoModal.name} ist bereits beigetreten</h3>
             <p style={{ fontSize: '0.9rem', marginBottom: '16px', color: 'var(--text-secondary)' }}>
-              Um deinen Wunschzettel zu bearbeiten oder dein Wichtelkind einzusehen, nutze bitte deinen persönlichen Zugangslink (aus deinen Browser-Lesezeichen oder WhatsApp).
+              Um deinen Wunschzettel zu bearbeiten oder dein Wichtelkind einzusehen, nutze bitte deinen persönlichen Zugangslink (aus deinen Browser-Lesezeichen, dem Verlauf oder deinem Chat).
             </p>
             <div style={{
               background: 'rgba(10, 14, 23, 0.5)',
@@ -391,7 +391,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
               color: 'var(--text-muted)',
               textAlign: 'left'
             }}>
-              <strong>Tipp:</strong> Falls du deinen Link nicht mehr findest, kann dir der Organisator deinen persönlichen Link im Admin-Bereich mit einem Klick neu kopieren und schicken.
+              <strong>100% Geheim vor dem Admin:</strong> Aus Datenschutzgründen hat selbst der Organisator keinen Zugriff auf deinen persönlichen Zugangslink und kann zu keinem Zeitpunkt sehen, wen du beschenkst. (Falls du vor der Auslosung deinen Zugang verloren hast, kann der Admin deinen Beitritt freigeben, damit du deinen Namen neu auswählen kannst).
             </div>
 
             <button

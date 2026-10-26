@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Calendar, Euro, Users, CheckCircle2, AlertCircle, Copy, Check,
   QrCode, Share2, Play, Lock, Trash2, ShieldCheck, Clock, ExternalLink,
-  Edit2, Plus, Pencil, Upload, X
+  Edit2, Plus, Pencil, Upload, X, RotateCcw
 } from 'lucide-react';
 import { BANNER_PRESETS, BUDGET_PRESETS, formatDate, AVATAR_PRESETS } from '../constants/presets';
 import QRCodeModal from './QRCodeModal';
@@ -193,6 +193,30 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       }
 
       setFeedbackMessage({ type: 'success', text: `Teilnehmer "${p.name}" wurde entfernt.` });
+      await fetchAdminData();
+    } catch (err) {
+      setFeedbackMessage({ type: 'error', text: err.message });
+    }
+  };
+
+  // Reset participant claim (before draw)
+  const handleResetParticipantClaim = async (p) => {
+    const confirmReset = window.confirm(
+      `Möchtest du den Beitritt von "${p.name}" wirklich freigeben?\n\nDer Name wird wieder als "frei" markiert, sodass die Person auf der Einladungsseite neu beitreten kann. (Aus Datenschutzgründen hat der Admin keinen Zugriff auf persönliche Zugangslinks).`
+    );
+    if (!confirmReset) return;
+
+    setFeedbackMessage(null);
+    try {
+      const res = await fetch(`/api/events/${eventId}/admin/participants/${p.id}/reset?token=${adminToken}`, {
+        method: 'POST'
+      });
+      const resJson = await res.json();
+      if (!res.ok) {
+        throw new Error(resJson.error || 'Fehler beim Zurücksetzen des Beitritts.');
+      }
+
+      setFeedbackMessage({ type: 'success', text: `Beitritt für "${p.name}" wurde freigegeben.` });
       await fetchAdminData();
     } catch (err) {
       setFeedbackMessage({ type: 'error', text: err.message });
@@ -595,7 +619,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
         marginBottom: '24px'
       }}>
         <span style={{ fontSize: '0.85rem', color: '#fef3c7' }}>
-          <strong>Admin-Privatsphäre:</strong> Du siehst hier als Admin nur den Status (wer beigetreten ist und wer fertig ist). Auch nach der Auslosung kannst weder du noch sonst jemand einsehen, wer wen beschenkt.
+          <strong>100% Geheim vor dem Admin:</strong> Aus Datenschutzgründen werden die persönlichen Zugangs-Links der Teilnehmer niemals an das Admin-Dashboard übertragen. Weder du noch sonst jemand kann vor oder nach der Auslosung einsehen, wer wen beschenkt.
         </span>
       </div>
 
@@ -715,16 +739,16 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                     <span className="badge badge-empty">Noch offen</span>
                   )}
 
-                  {p.is_claimed === 1 && p.participant_token && (
+                  {/* Reset claim button (only before draw, if claimed) */}
+                  {!event.is_drawn && p.is_claimed === 1 && (
                     <button
                       type="button"
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => handleCopy(`${window.location.origin}/event/${eventId}/me?token=${p.participant_token}`, `p_${p.id}`)}
-                      title={`Zugangslink für ${p.name} kopieren (falls verloren)`}
-                      style={{ padding: '4px 9px', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '4px' }}
+                      className="btn btn-outline btn-sm"
+                      onClick={() => handleResetParticipantClaim(p)}
+                      title={`Beitritt von "${p.name}" zurücksetzen (Name wieder freigeben)`}
+                      style={{ padding: '4px 8px', border: 'none', color: '#fbbf24' }}
                     >
-                      {copiedLink === `p_${p.id}` ? <Check size={13} color="#10b981" /> : <Copy size={13} />}
-                      <span>{copiedLink === `p_${p.id}` ? 'Kopiert!' : 'Link'}</span>
+                      <RotateCcw size={13} />
                     </button>
                   )}
 

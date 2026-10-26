@@ -429,9 +429,10 @@ app.get('/api/events/:id/admin', (req, res) => {
       return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
     }
 
-    // Fetch participants with tokens so admin can share personal link if a participant lost access
+    // STRICT PRIVACY: Admin NEVER receives participant_token!
+    // This cryptographically ensures the admin can never open participant links or see drawn targets.
     const participants = db.prepare(`
-      SELECT id, name, is_claimed, participant_token, avatar_url, is_ready,
+      SELECT id, name, is_claimed, avatar_url, is_ready,
              CASE WHEN (wishlist_text IS NOT NULL AND length(wishlist_text) > 0)
                     OR (wishlist_url IS NOT NULL AND length(wishlist_url) > 0)
                   THEN 1 ELSE 0 END AS has_wishlist
@@ -713,6 +714,50 @@ app.put('/api/events/:id/admin/participants/:participantId', (req, res) => {
   } catch (err) {
     console.error('Fehler beim Umbenennen des Teilnehmers:', err);
     res.status(500).json({ error: 'Serverfehler beim Umbenennen des Teilnehmers.' });
+  }
+});
+
+/**
+ * Admin resets a participant claim (ONLY before draw)
+ * In case a participant picked the wrong name or lost their link before the draw.
+ * Admin still NEVER sees any participant token!
+ */
+app.post('/api/events/:id/admin/participants/:participantId/reset', (req, res) => {
+  try {
+    const { id: eventId, participantId } = req.params;
+    const token = req.query.token || req.headers['x-admin-token'];
+
+    const event = db.prepare(`SELECT admin_token, is_drawn FROM events WHERE id = ?`).get(eventId);
+    if (!event || event.admin_token !== token) {
+      return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
+    }
+
+    if (event.is_drawn === 1) {
+      return res.status(400).json({ error: 'Beitritte können nach der Auslosung nicht mehr zurückgesetzt werden.' });
+    }
+
+    const participant = db.prepare(`SELECT id, name FROM participants WHERE id = ? AND event_id = ?`).get(participantId, eventId);
+    if (!participant) {
+      return res.status(404).json({ error: 'Teilnehmer nicht gefunden.' });
+    }
+
+    db.prepare(`
+      UPDATE participants
+      SET is_claimed = 0,
+          claimed_at = NULL,
+          participant_token = NULL,
+          is_ready = 0,
+          avatar_url = NULL,
+          wishlist_text = '',
+          wishlist_url = '',
+          wishlist_updated_at = NULL
+      WHERE id = ? AND event_id = ?
+    `).run(participantId, eventId);
+
+    res.json({ success: true, message: `Beitritt für "${participant.name}" wurde freigegeben.` });
+  } catch (err) {
+    console.error('Fehler beim Zurücksetzen des Beitritts:', err);
+    res.status(500).json({ error: 'Serverfehler beim Zurücksetzen des Beitritts.' });
   }
 });
 
