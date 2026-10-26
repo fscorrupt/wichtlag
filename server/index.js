@@ -435,7 +435,7 @@ app.get('/api/events/:id/admin', (req, res) => {
 });
 
 /**
- * Admin updates event settings or exclusions (before draw)
+ * Admin updates event settings or exclusions (before or after draw for metadata)
  */
 app.put('/api/events/:id/admin', (req, res) => {
   try {
@@ -448,37 +448,58 @@ app.put('/api/events/:id/admin', (req, res) => {
       return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
     }
 
-    if (event.is_drawn === 1) {
-      return res.status(400).json({ error: 'Aktion wurde bereits ausgelost und kann nicht mehr geändert werden.' });
+    if (event.is_drawn === 1 && ((Array.isArray(new_participants) && new_participants.length > 0) || Array.isArray(exclusions))) {
+      return res.status(400).json({ error: 'Teilnehmer und Ausschlussregeln können nach der Auslosung nicht mehr geändert werden.' });
     }
 
     const updateTx = db.transaction(() => {
       // Update event metadata
-      db.prepare(`
-        UPDATE events
-        SET title = COALESCE(?, title),
-            description = COALESCE(?, description),
-            event_date = COALESCE(?, event_date),
-            max_budget = COALESCE(?, max_budget),
-            banner_url = COALESCE(?, banner_url)
-        WHERE id = ?
-      `).run(title, description, event_date, max_budget, banner_url, eventId);
+      const updates = [];
+      const params = [];
+      if (title !== undefined && title.trim()) {
+        updates.push('title = ?');
+        params.push(title.trim());
+      }
+      if (description !== undefined) {
+        updates.push('description = ?');
+        params.push(description.trim());
+      }
+      if (event_date !== undefined && event_date) {
+        updates.push('event_date = ?');
+        params.push(event_date);
+      }
+      if (max_budget !== undefined) {
+        updates.push('max_budget = ?');
+        params.push(max_budget.trim());
+      }
+      if (banner_url !== undefined && banner_url) {
+        updates.push('banner_url = ?');
+        params.push(banner_url);
+      }
+      if (updates.length > 0) {
+        params.push(eventId);
+        db.prepare(`UPDATE events SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+      }
 
-      // Add new participants if supplied
-      if (Array.isArray(new_participants)) {
+      // Add new participants if supplied (bulk support)
+      if (Array.isArray(new_participants) && event.is_drawn !== 1) {
         const insertP = db.prepare(`
           INSERT INTO participants (id, event_id, name, is_claimed, is_ready)
           VALUES (?, ?, ?, 0, 0)
         `);
         for (const name of new_participants) {
           if (name && name.trim()) {
-            insertP.run(generateId(6), eventId, name.trim());
+            const clean = name.trim();
+            const exists = db.prepare('SELECT id FROM participants WHERE event_id = ? AND LOWER(name) = LOWER(?)').get(eventId, clean);
+            if (!exists) {
+              insertP.run(generateId(6), eventId, clean);
+            }
           }
         }
       }
 
       // Update exclusions if provided
-      if (Array.isArray(exclusions)) {
+      if (Array.isArray(exclusions) && event.is_drawn !== 1) {
         db.prepare(`DELETE FROM exclusions WHERE event_id = ?`).run(eventId);
         const insertEx = db.prepare(`
           INSERT INTO exclusions (id, event_id, giver_name, receiver_name)
@@ -497,6 +518,177 @@ app.put('/api/events/:id/admin', (req, res) => {
   } catch (err) {
     console.error('Fehler beim Speichern der Event-Änderungen:', err);
     res.status(500).json({ error: 'Fehler beim Speichern.' });
+  }
+});
+
+/**
+ * Admin adds a single participant to an existing event (before draw)
+ */
+app.post('/api/events/:id/admin/participants', (req, res) => {
+  try {
+    const eventId = req.params.id;
+    const token = req.query.token || req.headers['x-admin-token'];
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name darf nicht leer sein.' });
+    }
+    const cleanName = name.trim();
+
+    const event = db.prepare(`SELECT admin_token, is_drawn FROM events WHERE id = ?`).get(eventId);
+    if (!event || event.admin_token !== token) {
+      return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
+    }
+
+    if (event.is_drawn === 1) {
+      return res.status(400).json({ error: 'Die Aktion wurde bereits ausgelost. Teilnehmer können nur vor der Auslosung hinzugefügt werden.' });
+    }
+
+    // Check duplicate name in this event
+    const exists = db.prepare(`SELECT id FROM participants WHERE event_id = ? AND LOWER(name) = LOWER(?)`).get(eventId, cleanName);
+    if (exists) {
+      return res.status(400).json({ error: `Ein Teilnehmer mit dem Namen "${cleanName}" existiert bereits in dieser Aktion.` });
+    }
+
+    const newId = generateId(6);
+    db.prepare(`
+      INSERT INTO participants (id, event_id, name, is_claimed, is_ready)
+      VALUES (?, ?, ?, 0, 0)
+    `).run(newId, eventId, cleanName);
+
+    res.json({
+      success: true,
+      participant: {
+        id: newId,
+        name: cleanName,
+        is_claimed: 0,
+        is_ready: 0
+      }
+    });
+  } catch (err) {
+    console.error('Fehler beim Hinzufügen des Teilnehmers:', err);
+    res.status(500).json({ error: 'Serverfehler beim Hinzufügen des Teilnehmers.' });
+  }
+});
+
+/**
+ * Admin deletes a participant from an event (before draw)
+ */
+app.delete('/api/events/:id/admin/participants/:participantId', (req, res) => {
+  try {
+    const { id: eventId, participantId } = req.params;
+    const token = req.query.token || req.headers['x-admin-token'];
+
+    const event = db.prepare(`SELECT admin_token, is_drawn FROM events WHERE id = ?`).get(eventId);
+    if (!event || event.admin_token !== token) {
+      return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
+    }
+
+    if (event.is_drawn === 1) {
+      return res.status(400).json({ error: 'Die Aktion wurde bereits ausgelost. Teilnehmer können nach der Auslosung nicht mehr entfernt werden.' });
+    }
+
+    const participant = db.prepare(`SELECT id, name FROM participants WHERE id = ? AND event_id = ?`).get(participantId, eventId);
+    if (!participant) {
+      return res.status(404).json({ error: 'Teilnehmer nicht gefunden.' });
+    }
+
+    const deleteTx = db.transaction(() => {
+      // Remove any exclusions referencing this participant
+      db.prepare(`
+        DELETE FROM exclusions
+        WHERE event_id = ? AND (giver_name = ? OR receiver_name = ?)
+      `).run(eventId, participant.name, participant.name);
+
+      // Delete the participant (other participants are untouched!)
+      db.prepare(`DELETE FROM participants WHERE id = ? AND event_id = ?`).run(participantId, eventId);
+    });
+
+    deleteTx();
+    res.json({ success: true, message: `Teilnehmer "${participant.name}" wurde entfernt.` });
+  } catch (err) {
+    console.error('Fehler beim Entfernen des Teilnehmers:', err);
+    res.status(500).json({ error: 'Serverfehler beim Entfernen des Teilnehmers.' });
+  }
+});
+
+/**
+ * Admin renames a participant (before draw)
+ */
+app.put('/api/events/:id/admin/participants/:participantId', (req, res) => {
+  try {
+    const { id: eventId, participantId } = req.params;
+    const token = req.query.token || req.headers['x-admin-token'];
+    const { name } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name darf nicht leer sein.' });
+    }
+    const cleanName = name.trim();
+
+    const event = db.prepare(`SELECT admin_token, is_drawn FROM events WHERE id = ?`).get(eventId);
+    if (!event || event.admin_token !== token) {
+      return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
+    }
+
+    if (event.is_drawn === 1) {
+      return res.status(400).json({ error: 'Namen können nach der Auslosung nicht mehr geändert werden.' });
+    }
+
+    const participant = db.prepare(`SELECT id, name FROM participants WHERE id = ? AND event_id = ?`).get(participantId, eventId);
+    if (!participant) {
+      return res.status(404).json({ error: 'Teilnehmer nicht gefunden.' });
+    }
+
+    // Check duplicate name
+    const exists = db.prepare(`
+      SELECT id FROM participants
+      WHERE event_id = ? AND LOWER(name) = LOWER(?) AND id != ?
+    `).get(eventId, cleanName, participantId);
+    if (exists) {
+      return res.status(400).json({ error: `Ein Teilnehmer mit dem Namen "${cleanName}" existiert bereits.` });
+    }
+
+    const oldName = participant.name;
+    const renameTx = db.transaction(() => {
+      // Update exclusions referencing old name
+      db.prepare(`UPDATE exclusions SET giver_name = ? WHERE event_id = ? AND giver_name = ?`).run(cleanName, eventId, oldName);
+      db.prepare(`UPDATE exclusions SET receiver_name = ? WHERE event_id = ? AND receiver_name = ?`).run(cleanName, eventId, oldName);
+
+      // Update participant name (token, wishlist, etc. are untouched!)
+      db.prepare(`UPDATE participants SET name = ? WHERE id = ?`).run(cleanName, participantId);
+    });
+
+    renameTx();
+    res.json({ success: true, name: cleanName });
+  } catch (err) {
+    console.error('Fehler beim Umbenennen des Teilnehmers:', err);
+    res.status(500).json({ error: 'Serverfehler beim Umbenennen des Teilnehmers.' });
+  }
+});
+
+/**
+ * Admin deletes a single exclusion rule (before draw)
+ */
+app.delete('/api/events/:id/admin/exclusions/:exclusionId', (req, res) => {
+  try {
+    const { id: eventId, exclusionId } = req.params;
+    const token = req.query.token || req.headers['x-admin-token'];
+
+    const event = db.prepare(`SELECT admin_token, is_drawn FROM events WHERE id = ?`).get(eventId);
+    if (!event || event.admin_token !== token) {
+      return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
+    }
+
+    if (event.is_drawn === 1) {
+      return res.status(400).json({ error: 'Ausschlussregeln können nach der Auslosung nicht mehr geändert werden.' });
+    }
+
+    db.prepare(`DELETE FROM exclusions WHERE id = ? AND event_id = ?`).run(exclusionId, eventId);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Fehler beim Löschen des Ausschlusses:', err);
+    res.status(500).json({ error: 'Serverfehler beim Löschen des Ausschlusses.' });
   }
 });
 

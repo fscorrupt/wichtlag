@@ -87,7 +87,7 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
           <div className="workflow-step">
             <span className="workflow-step-num">01 // SCHRITT</span>
             <h4>Erstellen</h4>
-            <p>Titel, Datum, Budget und Namen eintragen.</p>
+            <p>Titel, Datum, Budget und Teilnehmer eintragen.</p>
           </div>
 
           <div className="workflow-step">
@@ -99,13 +99,13 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
           <div className="workflow-step">
             <span className="workflow-step-num">03 // SCHRITT</span>
             <h4>Wünschen</h4>
-            <p>Eigenen Namen wählen und Wunschzettel ausfüllen.</p>
+            <p>Namen wählen und Wunschzettel ausfüllen – jederzeit anpassbar.</p>
           </div>
 
           <div className="workflow-step">
             <span className="workflow-step-num">04 // SCHRITT</span>
             <h4>Auslosen</h4>
-            <p>Admin startet die Ziehung – jeder sieht sein Wichtelkind.</p>
+            <p>Admin startet die Ziehung – jeder sieht geheim sein Wichtelkind.</p>
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
           <span className="card-tag tag-gold">Wichtig // Lesezeichen</span>
           <h3>Link unbedingt speichern!</h3>
           <p>
-            Weil wir komplett auf E-Mails verzichten, gibt es keine Mail-Zustellung und keine Passwort-Rücksetzung. Speichert euren persönlichen Zugangslink als Lesezeichen, um jederzeit wiederzukehren.
+            Weil wir komplett auf E-Mails verzichten, gibt es keine Mail-Zustellung und keine Passwörter. Speichert euren persönlichen Zugangslink als Lesezeichen oder im Chat, um jederzeit wiederzukehren.
           </p>
         </div>
 
@@ -124,15 +124,23 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
           <span className="card-tag tag-emerald">Privatsphäre</span>
           <h3>100% Geheim vor Admins</h3>
           <p>
-            Der Organisator sieht nur, wer beigetreten ist und wer bereit ist. Die Auslosungs-Paarungen werden serverseitig so gefiltert, dass sie selbst für den Admin unsichtbar bleiben.
+            Der Organisator sieht nur, wer beigetreten und wer bereit ist. Die Auslosungs-Paarungen werden serverseitig so geschützt, dass sie selbst für den Admin unsichtbar bleiben.
           </p>
         </div>
 
         <div className="feature-bento-card">
-          <span className="card-tag">Wunschzettel</span>
-          <h3>Wünsche & Shop-Links</h3>
+          <span className="card-tag">Wunschzettel // Flexibel</span>
+          <h3>Wünsche auch nach Auslosung anpassbar</h3>
           <p>
-            Trage deine Geschenkideen als Text ein oder hinterlege einen direkten Link zu einer externen Wunschliste (z. B. Amazon oder wunschliste.de).
+            Trage Geschenkideen als Text oder Shop-Link ein (z. B. Amazon oder wunschliste.de). Wunschzettel können auch nach der Auslosung jederzeit weiter angepasst werden – dein Wichtel sieht die Änderungen sofort.
+          </p>
+        </div>
+
+        <div className="feature-bento-card">
+          <span className="card-tag">Admin // Kontrolle</span>
+          <h3>Nachträglich anpassbar</h3>
+          <p>
+            Banner, Notizen, Datum und Budget können vom Admin jederzeit aktualisiert werden. Vor der Auslosung können neue Teilnehmer flexibel hinzugefügt, umbenannt oder entfernt werden – ohne bestehende Links zu verändern.
           </p>
         </div>
 
@@ -140,15 +148,15 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
           <span className="card-tag">Sicherheit</span>
           <h3>Ausschlüsse & 14-Tage-Löschung</h3>
           <p>
-            Paare oder Personen, die sich nicht ziehen dürfen, werden vorab ausgeschlossen. Genau 14 Tage nach dem Event werden alle Daten und Bilder automatisch gelöscht.
+            Personen, die sich nicht beschenken dürfen (z. B. Paare), werden vorab ausgeschlossen. Genau 14 Tage nach dem Event werden alle Daten und Uploads automatisch rückstandslos gelöscht.
           </p>
         </div>
 
         <div className="feature-bento-card">
-          <span className="card-tag">Web-App</span>
-          <h3>Keine App & keine Registrierung</h3>
+          <span className="card-tag">Web-App // Mobil</span>
+          <h3>Perfekt für Smartphones & Tablets</h3>
           <p>
-            WichtlAG funktioniert direkt im Browser auf Smartphones, Tablets und PCs. Niemand muss ein Benutzerkonto anlegen oder eine App installieren.
+            WichtlAG ist voll für Mobiltelefone optimiert: Kein App-Download und keine Registrierung nötig. Einfach den Einladungslink per WhatsApp oder Signal öffnen und direkt teilnehmen.
           </p>
         </div>
       </div>

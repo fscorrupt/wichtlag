@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
   Calendar, Euro, Users, CheckCircle2, AlertCircle, Copy, Check,
-  QrCode, Share2, Play, Lock, Trash2, ShieldCheck, Clock, ExternalLink
+  QrCode, Share2, Play, Lock, Trash2, ShieldCheck, Clock, ExternalLink,
+  Edit2, Plus, Pencil, Upload, X
 } from 'lucide-react';
-import { BANNER_PRESETS, formatDate, AVATAR_PRESETS } from '../constants/presets';
+import { BANNER_PRESETS, BUDGET_PRESETS, formatDate, AVATAR_PRESETS } from '../constants/presets';
 import QRCodeModal from './QRCodeModal';
 import confetti from 'canvas-confetti';
 
@@ -16,6 +17,26 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrUrl, setQrUrl] = useState('');
   const [copiedLink, setCopiedLink] = useState('');
+
+  // Edit Event Details Modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editEventDate, setEditEventDate] = useState('');
+  const [editMaxBudget, setEditMaxBudget] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editBannerUrl, setEditBannerUrl] = useState('');
+  const [isSavingDetails, setIsSavingDetails] = useState(false);
+  const [isUploadingBanner, setIsUploadingBanner] = useState(false);
+
+  // Participant management state
+  const [newParticipantName, setNewParticipantName] = useState('');
+  const [addingParticipant, setAddingParticipant] = useState(false);
+  const [renameParticipant, setRenameParticipant] = useState(null);
+  const [renameNewName, setRenameNewName] = useState('');
+  const [renaming, setRenaming] = useState(false);
+
+  // Status feedback toast/banner
+  const [feedbackMessage, setFeedbackMessage] = useState(null);
 
   // Fetch admin event details
   const fetchAdminData = async () => {
@@ -47,6 +68,192 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
     navigator.clipboard.writeText(text);
     setCopiedLink(key);
     setTimeout(() => setCopiedLink(''), 2500);
+  };
+
+  // Open Edit Event Details Modal
+  const handleOpenEditModal = () => {
+    if (!data?.event) return;
+    setEditTitle(data.event.title);
+    setEditEventDate(data.event.event_date);
+    setEditMaxBudget(data.event.max_budget || '');
+    setEditDescription(data.event.description || '');
+    setEditBannerUrl(data.event.banner_url || 'preset:winterwald');
+    setShowEditModal(true);
+  };
+
+  // Handle Banner Upload in Edit Modal
+  const handleBannerUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('image', file);
+    setIsUploadingBanner(true);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || 'Fehler beim Hochladen des Bildes.');
+      }
+      setEditBannerUrl(resData.url);
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setIsUploadingBanner(false);
+    }
+  };
+
+  // Save Event Details
+  const handleSaveEventDetails = async (e) => {
+    e.preventDefault();
+    if (!editTitle.trim() || !editEventDate) return;
+
+    setIsSavingDetails(true);
+    setFeedbackMessage(null);
+
+    try {
+      const res = await fetch(`/api/events/${eventId}/admin?token=${adminToken}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editTitle.trim(),
+          event_date: editEventDate,
+          max_budget: editMaxBudget.trim(),
+          description: editDescription.trim(),
+          banner_url: editBannerUrl
+        })
+      });
+
+      const resJson = await res.json();
+      if (!res.ok) {
+        throw new Error(resJson.error || 'Fehler beim Speichern der Aktions-Details.');
+      }
+
+      setShowEditModal(false);
+      setFeedbackMessage({ type: 'success', text: 'Aktions-Details & Banner wurden erfolgreich gespeichert!' });
+      await fetchAdminData();
+    } catch (err) {
+      setFeedbackMessage({ type: 'error', text: err.message });
+    } finally {
+      setIsSavingDetails(false);
+    }
+  };
+
+  // Add a new participant
+  const handleAddParticipant = async (e) => {
+    e.preventDefault();
+    const clean = newParticipantName.trim();
+    if (!clean) return;
+
+    setAddingParticipant(true);
+    setFeedbackMessage(null);
+
+    try {
+      const res = await fetch(`/api/events/${eventId}/admin/participants?token=${adminToken}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: clean })
+      });
+
+      const resJson = await res.json();
+      if (!res.ok) {
+        throw new Error(resJson.error || 'Fehler beim Hinzufügen des Teilnehmers.');
+      }
+
+      setNewParticipantName('');
+      setFeedbackMessage({ type: 'success', text: `Teilnehmer "${clean}" wurde erfolgreich hinzugefügt!` });
+      await fetchAdminData();
+    } catch (err) {
+      setFeedbackMessage({ type: 'error', text: err.message });
+    } finally {
+      setAddingParticipant(false);
+    }
+  };
+
+  // Delete a participant
+  const handleDeleteParticipant = async (p) => {
+    const warning = p.is_claimed
+      ? `"${p.name}" ist bereits beigetreten und hat eventuell schon Wünsche hinterlegt.\n\nMöchtest du "${p.name}" wirklich unwiderruflich entfernen? Der persönliche Zugangslink wird ungültig. Bestehende andere Teilnehmer bleiben unverändert.`
+      : `Möchtest du "${p.name}" aus der Aktion entfernen?`;
+
+    if (!window.confirm(warning)) return;
+
+    setFeedbackMessage(null);
+    try {
+      const res = await fetch(`/api/events/${eventId}/admin/participants/${p.id}?token=${adminToken}`, {
+        method: 'DELETE'
+      });
+      const resJson = await res.json();
+      if (!res.ok) {
+        throw new Error(resJson.error || 'Fehler beim Entfernen des Teilnehmers.');
+      }
+
+      setFeedbackMessage({ type: 'success', text: `Teilnehmer "${p.name}" wurde entfernt.` });
+      await fetchAdminData();
+    } catch (err) {
+      setFeedbackMessage({ type: 'error', text: err.message });
+    }
+  };
+
+  // Open Rename Participant modal
+  const handleOpenRename = (p) => {
+    setRenameParticipant(p);
+    setRenameNewName(p.name);
+  };
+
+  // Save Participant Rename
+  const handleSaveRename = async (e) => {
+    e.preventDefault();
+    const clean = renameNewName.trim();
+    if (!clean || !renameParticipant) return;
+
+    setRenaming(true);
+    setFeedbackMessage(null);
+
+    try {
+      const res = await fetch(`/api/events/${eventId}/admin/participants/${renameParticipant.id}?token=${adminToken}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: clean })
+      });
+
+      const resJson = await res.json();
+      if (!res.ok) {
+        throw new Error(resJson.error || 'Fehler beim Umbenennen des Teilnehmers.');
+      }
+
+      setFeedbackMessage({ type: 'success', text: `Name wurde erfolgreich in "${clean}" geändert.` });
+      setRenameParticipant(null);
+      await fetchAdminData();
+    } catch (err) {
+      setFeedbackMessage({ type: 'error', text: err.message });
+    } finally {
+      setRenaming(false);
+    }
+  };
+
+  // Delete an exclusion rule
+  const handleDeleteExclusion = async (ex) => {
+    if (!window.confirm(`Ausschlussregel "${ex.giver_name} darf nicht ${ex.receiver_name}" wirklich löschen?`)) return;
+
+    setFeedbackMessage(null);
+    try {
+      const res = await fetch(`/api/events/${eventId}/admin/exclusions/${ex.id}?token=${adminToken}`, {
+        method: 'DELETE'
+      });
+      if (!res.ok) {
+        const resJson = await res.json();
+        throw new Error(resJson.error || 'Fehler beim Löschen des Ausschlusses.');
+      }
+
+      await fetchAdminData();
+    } catch (err) {
+      setFeedbackMessage({ type: 'error', text: err.message });
+    }
   };
 
   // Trigger Secret Santa draw
@@ -141,7 +348,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
   return (
     <div>
-      {/* Banner Display */}
+      {/* Banner Display with Edit Button */}
       <div
         className="event-banner-display"
         style={{
@@ -154,20 +361,39 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       >
         <div className="banner-overlay" />
         <div className="banner-content">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-            <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white' }}>
-              Admin-Bereich
-            </span>
-            {event.is_drawn ? (
-              <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.9)', color: 'white' }}>
-                ✓ Ausgelost
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white' }}>
+                Admin-Bereich
               </span>
-            ) : (
-              <span className="badge" style={{ background: 'rgba(245, 158, 11, 0.9)', color: '#1e1302' }}>
-                In Vorbereitung
-              </span>
-            )}
+              {event.is_drawn ? (
+                <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.9)', color: 'white' }}>
+                  ✓ Ausgelost
+                </span>
+              ) : (
+                <span className="badge" style={{ background: 'rgba(245, 158, 11, 0.9)', color: '#1e1302' }}>
+                  In Vorbereitung
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={handleOpenEditModal}
+              style={{
+                background: 'rgba(10, 14, 23, 0.75)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                fontSize: '0.8rem',
+                padding: '5px 12px'
+              }}
+            >
+              <Edit2 size={13} />
+              <span>Aktions-Details & Banner anpassen</span>
+            </button>
           </div>
+
           <h1 style={{ color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.7)', marginBottom: '4px' }}>
             {event.title}
           </h1>
@@ -177,6 +403,31 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
           </div>
         </div>
       </div>
+
+      {/* Feedback Toast / Banner */}
+      {feedbackMessage && (
+        <div style={{
+          background: feedbackMessage.type === 'error' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(16, 185, 129, 0.2)',
+          border: `1px solid ${feedbackMessage.type === 'error' ? 'rgba(239, 68, 68, 0.5)' : 'rgba(16, 185, 129, 0.5)'}`,
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 16px',
+          color: feedbackMessage.type === 'error' ? '#fca5a5' : '#6ee7b7',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px'
+        }}>
+          <span>{feedbackMessage.text}</span>
+          <button
+            type="button"
+            onClick={() => setFeedbackMessage(null)}
+            style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', padding: '2px' }}
+          >
+            <X size={15} />
+          </button>
+        </div>
+      )}
 
       {drawSuccessMessage && (
         <div style={{
@@ -195,6 +446,27 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
             <strong style={{ display: 'block', fontSize: '1rem', color: 'white' }}>Auslosung erfolgreich!</strong>
             <span style={{ fontSize: '0.9rem' }}>{drawSuccessMessage}</span>
           </div>
+        </div>
+      )}
+
+      {/* Event Note / Description Card */}
+      {event.description && (
+        <div className="glass-card" style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem', color: '#ffffff' }}>Notiz zur Aktion</h3>
+            <button
+              type="button"
+              className="btn btn-outline btn-sm"
+              style={{ fontSize: '0.75rem', padding: '3px 8px', border: 'none' }}
+              onClick={handleOpenEditModal}
+            >
+              <Edit2 size={12} />
+              <span>Bearbeiten</span>
+            </button>
+          </div>
+          <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: '0.92rem', color: 'var(--text-secondary)' }}>
+            {event.description}
+          </p>
         </div>
       )}
 
@@ -327,9 +599,39 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
         </span>
       </div>
 
-      {/* Participants Table */}
+      {/* Participants Table with Add & Manage functionality */}
       <div className="glass-card">
-        <h2 style={{ marginBottom: '16px' }}>Teilnehmer-Status ({participants.length})</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
+          <h2 style={{ margin: 0 }}>Teilnehmer-Status ({participants.length})</h2>
+          {event.is_drawn && (
+            <span style={{ fontSize: '0.82rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Lock size={13} /> Auslosung erfolgt (Teilnehmerliste fixiert)
+            </span>
+          )}
+        </div>
+
+        {/* Add Participant Form (before draw) */}
+        {!event.is_drawn && (
+          <form onSubmit={handleAddParticipant} style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              className="form-input"
+              style={{ flex: '1 1 200px' }}
+              placeholder="Weiteren Teilnehmer hinzufügen (z. B. Lisa, Papa)..."
+              value={newParticipantName}
+              onChange={(e) => setNewParticipantName(e.target.value)}
+              disabled={addingParticipant}
+            />
+            <button
+              type="submit"
+              className="btn btn-secondary btn-mobile-full"
+              disabled={addingParticipant || !newParticipantName.trim()}
+            >
+              <Plus size={15} />
+              <span>{addingParticipant ? 'Füge hinzu...' : 'Teilnehmer hinzufügen'}</span>
+            </button>
+          </form>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {participants.map((p) => {
@@ -369,9 +671,29 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                     )}
                   </div>
                   <div>
-                    <span style={{ fontWeight: '600', color: 'var(--text-main)', display: 'block' }}>
-                      {p.name}
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: '600', color: 'var(--text-main)', display: 'block' }}>
+                        {p.name}
+                      </span>
+                      {!event.is_drawn && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenRename(p)}
+                          title={`Name "${p.name}" korrigieren`}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            padding: '2px'
+                          }}
+                        >
+                          <Pencil size={12} />
+                        </button>
+                      )}
+                    </div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                       {p.is_claimed ? 'Beigetreten' : 'Wartet auf Beitritt'}
                     </span>
@@ -405,6 +727,26 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                       <span>{copiedLink === `p_${p.id}` ? 'Kopiert!' : 'Link'}</span>
                     </button>
                   )}
+
+                  {/* Delete participant button (before draw) */}
+                  {!event.is_drawn && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteParticipant(p)}
+                      title={`Teilnehmer "${p.name}" entfernen`}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'var(--text-muted)',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        padding: '4px'
+                      }}
+                    >
+                      <Trash2 size={14} color="#f87171" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -425,10 +767,31 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   padding: '4px 10px',
                   background: 'rgba(10, 14, 23, 0.5)',
                   border: '1px solid var(--surface-border)',
-                  borderRadius: 'var(--radius-sm)'
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}
               >
-                {ex.giver_name} darf nicht {ex.receiver_name}
+                <span>{ex.giver_name} darf nicht {ex.receiver_name}</span>
+                {!event.is_drawn && (
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteExclusion(ex)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      padding: '0',
+                      color: 'var(--text-muted)'
+                    }}
+                    title="Ausschlussregel entfernen"
+                  >
+                    <X size={12} color="#f87171" />
+                  </button>
+                )}
               </span>
             ))}
           </div>
@@ -453,6 +816,209 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
           <span>Aktion sofort löschen</span>
         </button>
       </div>
+
+      {/* Edit Event Details Modal */}
+      {showEditModal && (
+        <div className="modal-overlay" onClick={() => !isSavingDetails && setShowEditModal(false)}>
+          <div
+            className="modal-content"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0 }}>Aktions-Details & Banner anpassen</h3>
+              <button
+                type="button"
+                onClick={() => setShowEditModal(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+                disabled={isSavingDetails}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {event.is_drawn && (
+              <div style={{
+                background: 'rgba(16, 185, 129, 0.1)',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: 'var(--radius-md)',
+                padding: '10px 14px',
+                marginBottom: '16px',
+                fontSize: '0.82rem',
+                color: '#a7f3d0'
+              }}>
+                <strong>Hinweis:</strong> Das Wichteln ist bereits ausgelost. Du kannst Titel, Datum, Budget, Notiz und Banner jederzeit anpassen, ohne dass die Auslosung oder die Wunschzettel der Teilnehmer beeinflusst werden.
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEventDetails}>
+              <div className="form-group">
+                <label className="form-label">Titel der Aktion *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                <div className="form-group">
+                  <label className="form-label">Aktionsdatum (Bescherung) *</label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={editEventDate}
+                    onChange={(e) => setEditEventDate(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Budget (z. B. 20 €)</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={editMaxBudget}
+                    onChange={(e) => setEditMaxBudget(e.target.value)}
+                    placeholder="z. B. 20 €"
+                  />
+                  <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '6px' }}>
+                    {BUDGET_PRESETS.map((bp) => (
+                      <button
+                        key={bp}
+                        type="button"
+                        className={`btn btn-sm ${editMaxBudget === bp ? 'btn-primary' : 'btn-outline'}`}
+                        style={{ padding: '2px 7px', fontSize: '0.72rem' }}
+                        onClick={() => setEditMaxBudget(bp)}
+                      >
+                        {bp}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Beschreibung / Notiz</label>
+                <textarea
+                  className="form-textarea"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={3}
+                  placeholder="z. B. Ort, Uhrzeit oder besondere Hinweise an die Gruppe..."
+                />
+              </div>
+
+              {/* Banner Selector */}
+              <div className="form-group">
+                <label className="form-label">Aktions-Banner / Thema:</label>
+                <div className="preset-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', marginBottom: '12px' }}>
+                  {BANNER_PRESETS.map((preset) => (
+                    <div
+                      key={preset.id}
+                      className={`preset-card ${editBannerUrl === preset.id ? 'selected' : ''}`}
+                      style={{
+                        background: preset.background,
+                        height: '60px',
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        padding: '6px 10px',
+                        textAlign: 'left'
+                      }}
+                      onClick={() => setEditBannerUrl(preset.id)}
+                    >
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+                        {preset.name}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                    <Upload size={14} />
+                    <span>{isUploadingBanner ? 'Lade hoch...' : 'Eigenes Bild hochladen'}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleBannerUpload}
+                      disabled={isUploadingBanner}
+                    />
+                  </label>
+                  {editBannerUrl.startsWith('/uploads/') && (
+                    <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ Eigenes Bild aktiv</span>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-mobile-full"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={isSavingDetails}
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-mobile-full"
+                  disabled={isSavingDetails || !editTitle.trim() || !editEventDate}
+                >
+                  <span>{isSavingDetails ? 'Speichert...' : 'Änderungen speichern'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Participant Modal */}
+      {renameParticipant && (
+        <div className="modal-overlay" onClick={() => !renaming && setRenameParticipant(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <h3 style={{ marginBottom: '8px' }}>Teilnehmer umbenennen</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Korrigiere den Namen von <strong>{renameParticipant.name}</strong>. Zugangslink, Wunschzettel und Status bleiben für diese Person unverändert erhalten.
+            </p>
+
+            <form onSubmit={handleSaveRename}>
+              <div className="form-group">
+                <label className="form-label">Neuer Name</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={renameNewName}
+                  onChange={(e) => setRenameNewName(e.target.value)}
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-mobile-full"
+                  onClick={() => setRenameParticipant(null)}
+                  disabled={renaming}
+                >
+                  Abbrechen
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-mobile-full"
+                  disabled={renaming || !renameNewName.trim() || renameNewName.trim() === renameParticipant.name}
+                >
+                  <span>{renaming ? 'Speichert...' : 'Name speichern'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* QR Code Modal */}
       {showQrModal && (

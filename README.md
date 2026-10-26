@@ -1,21 +1,31 @@
+# WichtlAG
+
 <p align="center">
-  <img src="public/logo.png" alt="WichtlAG Logo" width="240" />
+  <img src="public/logo.png" alt="WichtlAG Logo" width="140" />
 </p>
 
-Eine selbstgehostete Wichtel-Web-App (Secret Santa), die komplett ohne E-Mail-Server auskommt. Alles läuft über Links und Token. Der Admin kann zu keinem Zeitpunkt einsehen, wer wen gezogen hat.
+Eine moderne, selbstgehostete Wichtel-Web-App (Secret Santa), die komplett ohne E-Mail-Server, Registrierung und Passwörter auskommt. Alles läuft über sichere Links und Token. Der Admin kann zu keinem Zeitpunkt einsehen, wer wen gezogen hat.
 
-![preview](https://github.com/fscorrupt/wichtlag/blob/main/sneak-peek.gif)
+---
 
-## Features
+## Highlights & Features
 
-- **Rein linkbasiert:** Kein SMTP oder Mail-Server nötig. Einladungslink oder QR-Code genügt.
-- **Admin-Geheimnis:** Auch der Ersteller der Aktion kann die Zuteilungen weder im UI noch über API-Responses einsehen.
-- **Ausschlussregeln:** Ausschlüsse definierbar (z. B. Person A darf nicht Person B ziehen) mit automatischer Prüfung, ob eine Auslosung mathematisch möglich ist.
-- **Wunschzettel:** Freitext für Wünsche/Abneigungen und optionaler Link zu einer externen Wunschliste.
-- **Vordefinierte Namen:** Admin legt die Teilnehmer fest; jeder Name kann beim Beitreten nur einmal gewählt werden.
-- **Statusübersicht:** Admin sieht, wer beigetreten ist und den Wunschzettel ausgefüllt hat, bevor die Auslosung gestartet wird.
-- **Banner und Avatare:** Auswahl vorgefertigter Themes oder eigene Bilduploads.
-- **Automatisches Aufräumen:** Aktionen werden 14 Tage nach dem Aktionsdatum mitsamt Datenbankeinträgen und Uploads automatisch gelöscht.
+- **Rein linkbasiert (Kein E-Mail-Server):** Kein SMTP-Setup, keine fehlerhaften Mail-Zustellungen. Teilnehmer treten einfach per Einladungslink oder QR-Code (WhatsApp, Signal, Telegram) bei.
+- **100% Geheim vor dem Admin:** Der Organisator sieht im Admin-Dashboard nur den Status (wer beigetreten ist und wer fertig ist). Auch nach der Auslosung kann weder der Admin noch sonst jemand einsehen, wer wen beschenkt.
+- **Wunschzettel jederzeit anpassbar:** Teilnehmer können Geschenkideen, Notizen und Links zu externen Wunschlisten (z. B. Amazon, Wunschbrille) eintragen – **auch nach der Auslosung** kann der Wunschzettel jederzeit weiter ergänzt werden.
+- **Nachträglich anpassbare Aktionen:**
+  - **Details & Banner:** Titel, Datum (Bescherung), Budget, Notizen und das Banner-Design (Presets oder eigenes Bild) können vom Admin jederzeit nachträglich geändert werden.
+  - **Teilnehmer verwalten:** Vor der Auslosung können neue Teilnehmer hinzugefügt, Namen korrigiert oder Personen entfernt werden – **ohne bestehende Teilnehmer-Links zu verändern**.
+  - **Ausschlussregeln:** Regeln wie „A darf nicht B ziehen“ können flexibel definiert, geprüft und einzeln wieder gelöscht werden.
+- **Für Mobiltelefone optimiert:**
+  - Speziell für Smartphones und Tablets ausgelegtes Layout.
+  - Berücksichtigung von iOS-Safe-Areas (Notch & Dynamic Island) und System-Theme-Colors.
+  - Schutz vor störendem iOS-Safari-Auto-Zoom bei Formularfeldern.
+  - Touch-freundliche Bedienflächen und responsive Stacking aller Listen und Modals.
+- **Grafische Themes & Avatare:** Große Auswahl festlicher Hintergrund-Themes und bunter Wichtel-Avatare oder Bilduploads.
+- **Automatisches Aufräumen (Datensparsamkeit):** Genau 14 Tage nach dem Bescherungsdatum werden alle Event-Daten, Wunschzettel und Bild-Uploads automatisch und rückstandslos aus der Datenbank gelöscht.
+
+---
 
 ## Schnellstart mit Docker Compose
 
@@ -23,36 +33,49 @@ Eine selbstgehostete Wichtel-Web-App (Secret Santa), die komplett ohne E-Mail-Se
 docker compose up -d
 ```
 
-Die Anwendung ist anschließend unter `http://localhost:3000` erreichbar. Die SQLite-Datenbank und Uploads werden persistent unter `./data` abgelegt.
+Die Webanwendung ist anschließend standardmäßig unter `http://localhost:3000` erreichbar. Die SQLite-Datenbank (`wichtlag.sqlite`) und Uploads werden persistent im gemounteten Verzeichnis `./data` gespeichert.
+
+---
 
 ## Manuelle Installation (Node.js)
 
-Voraussetzung: Node.js 18+
+Voraussetzung: **Node.js 18+**
 
 ```bash
+# 1. Abhängigkeiten installieren
 npm install
+
+# 2. Frontend kompilieren
 npm run build
+
+# 3. Server starten
 npm start
 ```
 
 Standard-Port: `3001` (über die Umgebungsvariable `PORT` anpassbar).
 
+---
+
 ## Konfiguration
 
-| Variable | Standard | Beschreibung |
+| Umgebungsvariable | Standard | Beschreibung |
 |---|---|---|
-| `PORT` | `3000` (Docker) / `3001` | HTTP-Port |
-| `DATA_DIR` | `/app/data` (Docker) / `./data` | Pfad für SQLite-Datenbank (`wichtlag.sqlite`) und Uploads |
+| `PORT` | `3000` (Docker) / `3001` (Lokal) | HTTP-Port der Express-App |
+| `DATA_DIR` | `/app/data` (Docker) / `./data` | Pfad für SQLite-Datenbank (`wichtlag.sqlite`) und Bilduploads |
 
-## Sicherheit und externer Betrieb
+---
 
-Wenn die Anwendung über das Internet (z. B. hinter einem Reverse Proxy) bereitgestellt wird:
+## Sicherheit & externer Betrieb
 
-- **Isolierter Container:** Der Container läuft ohne Host-Rechte.
+Wenn WichtlAG über das Internet (z. B. hinter einem Reverse Proxy wie Traefik, Caddy oder Nginx) bereitgestellt wird:
+
+- **Isolierter Container:** Läuft ohne Host-Rechte unter dem unprivilegierten Benutzer `node` (UID 1000).
 - **Read-Only Root-Dateisystem:** Das Dateisystem des Containers ist schreibgeschützt gemountet (`read_only: true`). Lediglich `/app/data` ist beschreibbar.
-- **Non-Root:** Die App läuft unter dem unprivilegierten Benutzer `node` (UID 1000).
 - **Entzogene Capabilities:** Alle Linux-Kernel-Capabilities sind entzogen (`cap_drop: [ALL]`), Rechteausweitung ist unterbunden (`no-new-privileges: true`).
-- **Keine Shell-Befehle:** Der Server führt intern keine Shell-Aufrufe aus. Datenbankabfragen erfolgen ausschließlich über Prepared Statements.
+- **Keine Shell-Befehle:** Der Server führt intern keine Shell-Aufrufe aus. Datenbankabfragen erfolgen über Prepared Statements (`better-sqlite3` mit WAL-Modus).
+- **Admin-Privatsphäre per Design:** Die Auslosungs-Paarungen werden niemals in Admin-API-Responses übertragen.
+
+---
 
 ## Entwicklung
 
@@ -60,7 +83,9 @@ Wenn die Anwendung über das Internet (z. B. hinter einem Reverse Proxy) bereitg
 npm run dev
 ```
 
-Startet den Express-Server auf Port 3001 und Vite mit Hot-Reloading auf Port 5173.
+Startet den Backend-Server auf Port 3001 und das Vite-Frontend mit Hot-Reloading auf Port 5173.
+
+---
 
 ## Lizenz
 
