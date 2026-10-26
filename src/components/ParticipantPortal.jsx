@@ -319,7 +319,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         }}>
           <strong style={{ color: 'white', display: 'block', marginBottom: '4px' }}>Die Auslosung hat noch nicht begonnen.</strong>
           <span style={{ fontSize: '0.85rem', color: '#bae6fd' }}>
-            Fülle deinen Wunschzettel aus und setze deinen Haken auf "Bereit". Sobald der Admin die Auslosung startet, erfährst du hier, wen du beschenkst!
+            Trage deine Wünsche ein und setze deinen Haken auf "Bereit". Hinweis: Du kannst deinen Wunschzettel auch nach der Auslosung jederzeit noch ändern und erweitern!
           </span>
         </div>
       ) : null}
@@ -414,26 +414,22 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
       <form onSubmit={handleSave} className="glass-card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
           <h2 style={{ margin: 0 }}>Dein Profil & Wunschzettel</h2>
-          {Boolean(event.is_drawn) && (
-            <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
-              Jederzeit anpassbar
-            </span>
-          )}
+          <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
+            Auch nach Auslosung anpassbar
+          </span>
         </div>
 
-        {Boolean(event.is_drawn) && (
-          <div style={{
-            background: 'rgba(16, 185, 129, 0.08)',
-            border: '1px solid rgba(16, 185, 129, 0.25)',
-            borderRadius: 'var(--radius-md)',
-            padding: '12px 16px',
-            marginBottom: '20px',
-            fontSize: '0.88rem',
-            color: '#a7f3d0'
-          }}>
-            <strong>Hinweis:</strong> Du kannst deine Wünsche oder Links jederzeit bis zur Bescherung anpassen oder ergänzen. Dein Wichtel sieht deine Änderungen direkt.
-          </div>
-        )}
+        <div style={{
+          background: 'rgba(16, 185, 129, 0.08)',
+          border: '1px solid rgba(16, 185, 129, 0.25)',
+          borderRadius: 'var(--radius-md)',
+          padding: '12px 16px',
+          marginBottom: '20px',
+          fontSize: '0.88rem',
+          color: '#a7f3d0'
+        }}>
+          <strong>Hinweis:</strong> Du kannst deinen Wunschzettel auch nach der Auslosung bis zur Bescherung jederzeit ändern oder ergänzen. Dein Wichtel sieht deine Aktualisierungen direkt.
+        </div>
 
         {saveSuccess && (
           <div style={{
@@ -500,6 +496,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             onChange={(e) => setWishlistText(e.target.value)}
             rows={5}
           />
+          <span className="form-hint">Du kannst deine Wünsche auch nach der Auslosung jederzeit anpassen oder ergänzen.</span>
         </div>
 
         {/* Wishlist External Link */}
@@ -536,7 +533,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                   Ich bin fertig & bereit für die Auslosung!
                 </strong>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Signalisiert dem Admin, dass dein Wunschzettel vollständig ist.
+                  Signalisiert dem Admin, dass du bereit bist. Du kannst deinen Wunschzettel auch nach der Auslosung jederzeit weiter anpassen.
                 </span>
               </div>
             </label>

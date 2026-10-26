@@ -270,7 +270,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
             <h3 style={{ marginBottom: '8px' }}>Bist du wirklich {selectedParticipant.name}?</h3>
             <p style={{ fontSize: '0.9rem', marginBottom: '20px' }}>
-              Sobald du diesen Namen wählst, ist er für andere gesperrt. Im nächsten Schritt kannst du deinen Wunschzettel ausfüllen und ein Profilbild wählen.
+              Sobald du diesen Namen wählst, ist er für andere gesperrt. Im nächsten Schritt kannst du deinen Wunschzettel ausfüllen – dieser kann auch nach der Auslosung jederzeit noch angepasst werden.
             </p>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
