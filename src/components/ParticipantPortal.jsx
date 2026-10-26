@@ -173,11 +173,11 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         <div className="banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white' }}>
-              Hallo {participant.name}! 👋
+              Hallo {participant.name}!
             </span>
             {Boolean(event.is_drawn) && (
               <span className="badge" style={{ background: '#10b981', color: 'white' }}>
-                🎉 Ausgelost
+                Ausgelost
               </span>
             )}
           </div>
@@ -185,8 +185,8 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             {event.title}
           </h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem' }}>
-            <span>📅 Bescherung: {formatDate(event.event_date)}</span>
-            {event.max_budget && <span>💶 Budget: {event.max_budget}</span>}
+            <span>Bescherung: {formatDate(event.event_date)}</span>
+            {event.max_budget && <span>Budget: {event.max_budget}</span>}
           </div>
         </div>
       </div>
@@ -402,10 +402,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
 
       {/* Profile & Wishlist Editor */}
       <form onSubmit={handleSave} className="glass-card">
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <Heart size={22} color="#ef4444" />
-          <span>Dein Profil & Wunschzettel</span>
-        </h2>
+        <h2 style={{ marginBottom: '16px' }}>Dein Profil & Wunschzettel</h2>
 
         {saveSuccess && (
           <div style={{

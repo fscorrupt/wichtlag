@@ -106,7 +106,7 @@ app.post('/api/events', (req, res) => {
         description ? description.trim() : '',
         event_date,
         max_budget ? max_budget.trim() : '',
-        banner_url || 'preset:winter1',
+        banner_url || 'preset:winterwald',
         adminToken
       );
 
@@ -585,6 +585,23 @@ if (fs.existsSync(clientDistPath)) {
 
 // Start auto-cleanup service (runs every hour)
 startCleanupSchedule();
+
+// Graceful shutdown handling (e.g. docker stop / compose down)
+function handleExit(signal) {
+  console.log(`[WichtlAG] Empfange ${signal}, führe WAL-Checkpoint durch und beende Server...`);
+  try {
+    // Flush all WAL changes into the main sqlite file and truncate WAL
+    db.pragma('wal_checkpoint(TRUNCATE)');
+    db.close();
+    console.log('[WichtlAG] Datenbank sauber geschlossen.');
+  } catch (err) {
+    console.error('[WichtlAG] Fehler beim Schließen der Datenbank:', err);
+  }
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => handleExit('SIGTERM'));
+process.on('SIGINT', () => handleExit('SIGINT'));
 
 app.listen(PORT, () => {
   console.log(`[WichtlAG] Server läuft auf Port ${PORT}`);

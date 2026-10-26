@@ -68,10 +68,16 @@ export function purgeExpiredEvents() {
 export function startCleanupSchedule() {
   // Run once immediately on start
   purgeExpiredEvents();
+  try {
+    db.pragma('wal_checkpoint(PASSIVE)');
+  } catch {}
 
   // Run every 60 minutes
   const ONE_HOUR = 60 * 60 * 1000;
   setInterval(() => {
     purgeExpiredEvents();
+    try {
+      db.pragma('wal_checkpoint(PASSIVE)');
+    } catch {}
   }, ONE_HOUR);
 }

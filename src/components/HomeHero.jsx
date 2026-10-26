@@ -1,7 +1,4 @@
 import React, { useState } from 'react';
-import {
-  Gift, Sparkles, ShieldCheck, Link2, Users, Heart, ArrowRight, Clock, EyeOff
-} from 'lucide-react';
 
 export default function HomeHero({ onCreateClick, onNavigate }) {
   const [accessCode, setAccessCode] = useState('');
@@ -24,73 +21,44 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
   return (
     <div>
       {/* Hero Header */}
-      <div style={{ textAlign: 'center', padding: '30px 10px 48px 10px' }}>
-        <div style={{ marginBottom: '20px' }}>
+      <div style={{ textAlign: 'center', padding: '24px 10px 36px 10px' }}>
+        <div style={{ marginBottom: '16px' }}>
           <img
             src="/logo.png"
             alt="WichtlAG"
             style={{
-              width: '120px',
-              height: '120px',
+              width: '110px',
+              height: '110px',
               borderRadius: '50%',
               objectFit: 'cover',
-              border: '3px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 8px 32px rgba(239, 68, 68, 0.4)',
-              transition: 'transform 0.3s ease'
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 6px 24px rgba(0, 0, 0, 0.4)'
             }}
           />
         </div>
 
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '6px 14px',
-          borderRadius: 'var(--radius-full)',
-          background: 'rgba(239, 68, 68, 0.15)',
-          border: '1px solid rgba(239, 68, 68, 0.3)',
-          color: '#fca5a5',
-          fontSize: '0.85rem',
-          fontWeight: 600,
-          marginBottom: '20px'
-        }}>
-          <Sparkles size={16} color="#fbbf24" />
-          <span>WichtlAG – Geheimes Wichteln leicht gemacht</span>
-        </div>
-
-        <h1 style={{ fontSize: '2.75rem', marginBottom: '16px', lineHeight: 1.2 }}>
-          Wichteln mit WichtlAG.<br />
-          <span style={{
-            background: 'linear-gradient(135deg, #ef4444 0%, #fbbf24 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
-            Einfach. Privat. Nur über Links.
-          </span>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '12px', lineHeight: 1.2 }}>
+          WichtlAG
         </h1>
 
-        <p style={{ fontSize: '1.15rem', maxWidth: '640px', margin: '0 auto 32px auto', color: 'var(--text-secondary)' }}>
-          Plane deine Wichtelrunde in Sekunden ohne E-Mail-Adressen. Mit smarten Ausschlussregeln, Wunschzetteln und garantierter Geheimhaltung – auch für den Admin!
+        <p style={{ fontSize: '1.1rem', maxWidth: '580px', margin: '0 auto 28px auto', color: 'var(--text-secondary)' }}>
+          Wichteln für Freunde, Familie und Kollegen. Ohne E-Mail-Adressen, ohne Benutzerkonten und mit garantiertem Schutz vor neugierigen Admins.
         </p>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="btn btn-primary btn-lg"
-            onClick={onCreateClick}
-          >
-            <Gift size={20} />
-            <span>Jetzt Aktion erstellen</span>
-            <ArrowRight size={18} />
-          </button>
-        </div>
+        <button
+          type="button"
+          className="btn btn-primary btn-lg"
+          onClick={onCreateClick}
+        >
+          <span>Neue Aktion erstellen</span>
+        </button>
       </div>
 
-      {/* Existing Event Code Form */}
-      <div className="glass-card" style={{ maxWidth: '520px', margin: '0 auto 48px auto', textAlign: 'center', padding: '24px' }}>
-        <h3 style={{ fontSize: '1.05rem', marginBottom: '8px' }}>Du wurdest eingeladen?</h3>
-        <p style={{ fontSize: '0.85rem', marginBottom: '16px' }}>
-          Gib den Aktions-Code oder Einladungslink ein, um direkt beizutreten:
+      {/* Code / Link Entry */}
+      <div className="glass-card" style={{ maxWidth: '500px', margin: '0 auto 36px auto', textAlign: 'center', padding: '20px' }}>
+        <h3 style={{ fontSize: '1rem', marginBottom: '6px' }}>Bereits eingeladen?</h3>
+        <p style={{ fontSize: '0.85rem', marginBottom: '14px', color: 'var(--text-muted)' }}>
+          Gib den Aktions-Code oder den Einladungslink ein:
         </p>
 
         <form onSubmit={handleJoinDirect} style={{ display: 'flex', gap: '8px' }}>
@@ -107,66 +75,62 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
         </form>
       </div>
 
-      {/* Feature Highlights Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-        gap: '20px',
-        marginBottom: '40px'
-      }}>
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{
-            width: '44px', height: '44px', borderRadius: '12px',
-            background: 'rgba(239, 68, 68, 0.15)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', marginBottom: '16px'
-          }}>
-            <EyeOff size={22} color="#ef4444" />
-          </div>
-          <h3 style={{ marginBottom: '8px' }}>100% Admin-Geheimnis</h3>
-          <p style={{ fontSize: '0.88rem' }}>
-            Der Admin darf und kann nicht sehen, wer wen gezogen hat. Die API gibt Zuteilungen niemals an die Admin-Ansicht heraus.
+      {/* How it works & important guidance */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+        <div className="glass-card" style={{ padding: '22px' }}>
+          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
+            Ablauf in vier Schritten
+          </h3>
+          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
+            1. <strong>Erstellen:</strong> Titel, Datum, Budget und Namen eintragen.<br />
+            2. <strong>Einladen:</strong> Link in WhatsApp oder Signal teilen.<br />
+            3. <strong>Wünschen:</strong> Jeder wählt seinen Namen und füllt den Wunschzettel aus.<br />
+            4. <strong>Auslosen:</strong> Sobald alle fertig sind, startet der Admin die Auslosung.
           </p>
         </div>
 
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{
-            width: '44px', height: '44px', borderRadius: '12px',
-            background: 'rgba(56, 189, 248, 0.15)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', marginBottom: '16px'
-          }}>
-            <Link2 size={22} color="#38bdf8" />
-          </div>
-          <h3 style={{ marginBottom: '8px' }}>Rein linkbasiert</h3>
-          <p style={{ fontSize: '0.88rem' }}>
-            Kein Mailserver (SMTP) nötig. Teile einfach den Einladungslink oder QR-Code in deiner WhatsApp- oder Signal-Gruppe.
+        <div className="glass-card" style={{ padding: '22px', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#fbbf24' }}>
+            Wichtig: Link speichern!
+          </h3>
+          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
+            Weil wir keine E-Mail-Adressen speichern, gibt es keinen Link per Mail und keine „Passwort vergessen“-Funktion. Sowohl Teilnehmer als auch der Admin müssen ihren persönlichen Zugangslink als Lesezeichen speichern, um später ihr Wichtelkind einsehen zu können.
           </p>
         </div>
 
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{
-            width: '44px', height: '44px', borderRadius: '12px',
-            background: 'rgba(251, 191, 36, 0.15)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', marginBottom: '16px'
-          }}>
-            <ShieldCheck size={22} color="#fbbf24" />
-          </div>
-          <h3 style={{ marginBottom: '8px' }}>Ausschlussregeln</h3>
-          <p style={{ fontSize: '0.88rem' }}>
-            Definiere ganz einfach, wer wen nicht ziehen darf (z. B. Paare oder Geschwister). Ein intelligenter Algorithmus prüft live die Lösbarkeit.
+        <div className="glass-card" style={{ padding: '22px' }}>
+          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
+            Admin sieht keine Zuteilungen
+          </h3>
+          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
+            Der Admin sieht in der Übersicht nur, wer beigetreten ist und ob der Wunschzettel ausgefüllt wurde. Wer wen beschenkt, bleibt auch für den Admin vollständig geheim – der Server filtert diese Daten für Admins strikt heraus.
           </p>
         </div>
 
-        <div className="glass-card" style={{ padding: '24px' }}>
-          <div style={{
-            width: '44px', height: '44px', borderRadius: '12px',
-            background: 'rgba(16, 185, 129, 0.15)', display: 'flex',
-            alignItems: 'center', justifyContent: 'center', marginBottom: '16px'
-          }}>
-            <Clock size={22} color="#10b981" />
-          </div>
-          <h3 style={{ marginBottom: '8px' }}>Auto-Löschung nach 14 Tagen</h3>
-          <p style={{ fontSize: '0.88rem' }}>
-            Vollkommene Datensparsamkeit: 2 Wochen nach dem Aktionsdatum wird die gesamte Aktion mit allen Daten und Bildern automatisch gelöscht.
+        <div className="glass-card" style={{ padding: '22px' }}>
+          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
+            Ausschlüsse & automatische Löschung
+          </h3>
+          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
+            Paare oder Personen, die sich nicht gegenseitig beschenken sollen, können vorab ausgeschlossen werden. Zudem wird jede Aktion genau 14 Tage nach dem Aktionsdatum automatisch samt Bildern und Wunschzetteln rückstandslos gelöscht.
+          </p>
+        </div>
+
+        <div className="glass-card" style={{ padding: '22px' }}>
+          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
+            Wunschzettel & externe Links
+          </h3>
+          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
+            Jeder Teilnehmer kann eigene Wünsche als Freitext eintragen oder einen direkten Link zu einer externen Wunschliste (z. B. Amazon, wunschliste.de) hinterlegen. So weiß das Wichtelkind genau, worüber sich der Beschenkte freut.
+          </p>
+        </div>
+
+        <div className="glass-card" style={{ padding: '22px' }}>
+          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
+            Keine App & keine Registrierung
+          </h3>
+          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
+            WichtlAG läuft direkt im Browser – auf Smartphones, Tablets und PCs. Niemand muss ein Konto anlegen oder eine App aus dem App Store herunterladen. Link öffnen, Namen wählen und sofort loslegen.
           </p>
         </div>
       </div>

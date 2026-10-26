@@ -1,25 +1,35 @@
+---
 services:
   wichtlag:
-    build: .
-    container_name: wichtlag
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
+    hostname: "wichtlag"
+    container_name: "wichtlag"
+    image: "ghcr.io/fscorrupt/wichtlag:latest"
+    restart: "${RESTARTAPP:-unless-stopped}"
     environment:
-      - PORT=3000
-      - DATA_DIR=/app/data
-      - NODE_ENV=production
-    # Hardening: Read-only root filesystem prevents any modification to the container OS
-    read_only: true
-    # Drop all Linux capabilities to eliminate privilege escalation risks
-    cap_drop:
-      - ALL
-    # Prevent child processes from gaining additional privileges
+      - "TZ=${TZ:-Europe/Berlin}"
+      - "UMASK=${UMASK:-0022}"
+      - "PORT=3000"
+      - "DATA_DIR=/app/data"
+    networks:
+      - ${DOCKERNETWORK:-proxy}
     security_opt:
-      - no-new-privileges:true
-    # In-memory temporary directory (noexec prevents running any uploaded/temp scripts)
-    tmpfs:
-      - /tmp:rw,noexec,nosuid,size=64m
-    # Persistent storage ONLY for SQLite database and uploaded images
+      - "${SECURITYOPS:-no-new-privileges}:${SECURITYOPSSET:-true}"
     volumes:
-      - ./data:/app/data
+      - "${APPFOLDER}/wichtlag:/app/data:rw"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=proxy"
+      - "dockupdater.enable=true"
+      - "traefik.http.routers.wichtlag-rtr.entrypoints=https"
+      - "traefik.http.routers.wichtlag-rtr.rule=Host(`wichtel.${DOMAIN}`)"
+      - "traefik.http.routers.wichtlag-rtr.tls=true"
+      - "traefik.http.routers.wichtlag-rtr.tls.certresolver=dns-cloudflare"
+      # Hinweis: Keine Authelia-Middleware, damit Teilnehmer ohne SSO-Account beitreten können:
+      # - "traefik.http.routers.wichtlag-rtr.middlewares=chain-authelia@file"
+      - "traefik.http.routers.wichtlag-rtr.service=wichtlag-svc"
+      - "traefik.http.services.wichtlag-svc.loadbalancer.server.port=3000"
+
+networks:
+  proxy:
+    driver: bridge
+    external: true

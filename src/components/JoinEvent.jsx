@@ -107,14 +107,14 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
         <div className="banner-overlay" />
         <div className="banner-content">
           <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white', marginBottom: '8px' }}>
-            Einladung zum Wichteln 🎁
+            Einladung zum Wichteln
           </span>
           <h1 style={{ color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.7)', marginBottom: '4px' }}>
             {event.title}
           </h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem' }}>
-            <span>📅 {formatDate(event.event_date)}</span>
-            {event.max_budget && <span>💶 Maximalwert: {event.max_budget}</span>}
+            <span>Bescherung: {formatDate(event.event_date)}</span>
+            {event.max_budget && <span>Budget: {event.max_budget}</span>}
           </div>
         </div>
       </div>
@@ -176,10 +176,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
 
       {/* Name Selection Grid */}
       <div className="glass-card">
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <Users size={22} color="#fbbf24" />
-          <span>Wähle deinen Namen aus der Liste</span>
-        </h2>
+        <h2 style={{ marginBottom: '8px' }}>Wähle deinen Namen aus der Liste</h2>
         <p style={{ fontSize: '0.9rem', marginBottom: '20px' }}>
           Der Organisator hat folgende Namen für die Runde festgelegt. Klicke auf deinen Namen, um beizutreten.
           Jeder Name kann nur genau einmal gewählt werden!

@@ -172,8 +172,8 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
             {event.title}
           </h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem' }}>
-            <span>📅 {formatDate(event.event_date)}</span>
-            {event.max_budget && <span>💶 Budget: {event.max_budget}</span>}
+            <span>Bescherung: {formatDate(event.event_date)}</span>
+            {event.max_budget && <span>Budget: {event.max_budget}</span>}
           </div>
         </div>
       </div>
@@ -200,10 +200,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       {/* Share Links Card */}
       <div className="glass-card">
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <Share2 size={22} color="#38bdf8" />
-          <span>Links zum Teilen & Verwalten</span>
-        </h2>
+        <h2 style={{ marginBottom: '16px' }}>Links zum Teilen & Verwalten</h2>
 
         <div style={{ marginBottom: '16px' }}>
           <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -336,10 +333,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       {/* Participants Table */}
       <div className="glass-card">
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-          <Users size={22} color="#38bdf8" />
-          <span>Teilnehmer-Status ({participants.length})</span>
-        </h2>
+        <h2 style={{ marginBottom: '16px' }}>Teilnehmer-Status ({participants.length})</h2>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {participants.map((p) => {
@@ -418,7 +412,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   borderRadius: 'var(--radius-sm)'
                 }}
               >
-                {ex.giver_name} ➔ 🚫 {ex.receiver_name}
+                {ex.giver_name} darf nicht {ex.receiver_name}
               </span>
             ))}
           </div>
