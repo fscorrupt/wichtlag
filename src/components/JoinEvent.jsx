@@ -33,6 +33,8 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
     };
 
     fetchEvent();
+    const interval = setInterval(fetchEvent, 8000);
+    return () => clearInterval(interval);
   }, [eventId]);
 
   const handleClaim = async () => {
@@ -89,7 +91,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
     );
   }
 
-  const { event, participants } = data;
+  const { event, participants, stats } = data;
   const selectedPreset = BANNER_PRESETS.find((p) => p.id === event.banner_url);
 
   return (
@@ -172,6 +174,66 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
         </div>
       )}
 
+      {/* Status & Vorbereitung / Auslosung */}
+      <div className="glass-card" style={{
+        background: event.is_drawn
+          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 78, 59, 0.2) 100%)'
+          : stats?.allReady
+          ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.15) 100%)'
+          : 'var(--surface-1)',
+        border: event.is_drawn
+          ? '1px solid rgba(16, 185, 129, 0.4)'
+          : stats?.allReady
+          ? '1px solid rgba(16, 185, 129, 0.4)'
+          : '1px solid var(--surface-border)',
+        marginBottom: '24px'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '1.15rem' }}>
+              {event.is_drawn ? 'Wichteln ist ausgelost!' : 'Status & Auslosung'}
+            </h3>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              {event.is_drawn
+                ? 'Das Wichteln wurde ausgelost! Jeder Teilnehmer kann über seinen persönlichen Zugang sein Wichtelkind einsehen.'
+                : stats?.allReady
+                ? 'Alle Teilnehmer sind beigetreten und haben ihren Wunschzettel ausgefüllt. Der Organisator kann das Wichteln nun auslosen!'
+                : `Warte auf Teilnehmer: ${stats?.readyCount || 0} von ${stats?.totalCount || participants.length} bereit.`}
+            </p>
+          </div>
+
+          {!event.is_drawn && stats && (
+            <span
+              className={`badge ${stats.allReady ? 'badge-ready' : 'badge-pending'}`}
+              style={{ padding: '6px 12px', fontSize: '0.82rem' }}
+            >
+              {stats.readyCount} von {stats.totalCount} bereit
+            </span>
+          )}
+        </div>
+
+        {/* Readiness progress bar */}
+        {!event.is_drawn && stats && (
+          <div style={{ marginTop: '14px' }}>
+            <div style={{
+              height: '8px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(255,255,255,0.1)',
+              overflow: 'hidden'
+            }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${((stats.readyCount || 0) / Math.max(stats.totalCount || 1, 1)) * 100}%`,
+                  background: stats.allReady ? '#10b981' : 'var(--accent-gold)',
+                  transition: 'width 0.4s ease'
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Name Selection Grid */}
       <div className="glass-card">
         <h2 style={{ marginBottom: '8px' }}>Wähle deinen Namen aus der Liste</h2>
@@ -183,12 +245,13 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
         <div className="name-picker-grid">
           {participants.map((p) => {
             const isClaimed = p.is_claimed === 1;
+            const isReady = p.is_ready === 1;
             const avatarPreset = AVATAR_PRESETS.find((a) => a.id === p.avatar_url);
 
             return (
               <div
                 key={p.id}
-                className={`name-card ${isClaimed ? 'claimed' : ''}`}
+                className={`name-card ${isClaimed ? (isReady ? 'claimed ready' : 'claimed pending') : ''}`}
                 onClick={() => {
                   if (isClaimed) {
                     if (existingToken) {
@@ -225,9 +288,23 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                     <strong style={{ color: 'var(--text-main)', fontSize: '1rem', display: 'block' }}>
                       {p.name}
                     </strong>
-                    <span style={{ fontSize: '0.75rem', color: isClaimed ? '#fca5a5' : '#34d399' }}>
-                      {isClaimed ? 'Bereits beigetreten' : 'Frei zum Auswählen'}
-                    </span>
+                    {event.is_drawn ? (
+                      <span style={{ fontSize: '0.75rem', color: '#34d399' }}>
+                        Ausgelost
+                      </span>
+                    ) : isReady ? (
+                      <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <span>✓ Bereit für Auslosung</span>
+                      </span>
+                    ) : isClaimed ? (
+                      <span style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                        <span>Beigetreten (Wunschzettel noch offen)</span>
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Noch frei zum Auswählen
+                      </span>
+                    )}
                   </div>
                 </div>
 

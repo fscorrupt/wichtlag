@@ -51,6 +51,8 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
   useEffect(() => {
     if (eventId && token) {
       fetchPortalData();
+      const interval = setInterval(fetchPortalData, 8000);
+      return () => clearInterval(interval);
     }
   }, [eventId, token]);
 
@@ -163,7 +165,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
     );
   }
 
-  const { event, participant, target } = data;
+  const { event, participant, stats, target } = data;
   const selectedBanner = BANNER_PRESETS.find((p) => p.id === event.banner_url);
   const targetAvatarPreset = target ? AVATAR_PRESETS.find((a) => a.id === target.avatar_url) : null;
   const myAvatarPreset = AVATAR_PRESETS.find((a) => a.id === avatarUrl);
@@ -307,6 +309,57 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           )}
         </div>
       ) : null}
+
+      {/* Overall Round Status & Progress Bar (before draw) */}
+      {!event.is_drawn && stats && (
+        <div className="glass-card" style={{
+          background: stats.allReady
+            ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(5, 150, 105, 0.15) 100%)'
+            : 'var(--surface-1)',
+          border: stats.allReady
+            ? '1px solid rgba(16, 185, 129, 0.4)'
+            : '1px solid var(--surface-border)',
+          marginBottom: '24px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+            <div>
+              <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem' }}>
+                Status & Auslosung
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                {stats.allReady
+                  ? 'Alle Teilnehmer sind bereit! Der Organisator kann das Wichteln nun auslosen.'
+                  : `Warte auf Teilnehmer: ${stats.readyCount} von ${stats.totalCount} bereit.`}
+              </p>
+            </div>
+
+            <span
+              className={`badge ${stats.allReady ? 'badge-ready' : 'badge-pending'}`}
+              style={{ padding: '6px 12px', fontSize: '0.85rem' }}
+            >
+              {stats.readyCount} von {stats.totalCount} bereit
+            </span>
+          </div>
+
+          <div style={{ marginTop: '12px' }}>
+            <div style={{
+              height: '8px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(255,255,255,0.1)',
+              overflow: 'hidden'
+            }}>
+              <div
+                style={{
+                  height: '100%',
+                  width: `${((stats.readyCount || 0) / Math.max(stats.totalCount || 1, 1)) * 100}%`,
+                  background: stats.allReady ? '#10b981' : 'var(--accent-gold)',
+                  transition: 'width 0.4s ease'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Waiting banner if NOT drawn yet */}
       {!event.is_drawn ? (

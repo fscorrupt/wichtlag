@@ -170,9 +170,30 @@ app.get('/api/events/:id', (req, res) => {
       ORDER BY name COLLATE NOCASE ASC
     `).all(event.id);
 
+    const totalCount = participants.length;
+    const claimedCount = participants.filter(p => p.is_claimed === 1).length;
+    const readyCount = participants.filter(p => p.is_ready === 1).length;
+    const allReady = totalCount > 0 && readyCount === totalCount;
+
     res.json({
-      event,
-      participants
+      event: {
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        event_date: event.event_date,
+        max_budget: event.max_budget,
+        banner_url: event.banner_url,
+        is_drawn: event.is_drawn === 1,
+        drawn_at: event.drawn_at,
+        created_at: event.created_at
+      },
+      participants,
+      stats: {
+        totalCount,
+        claimedCount,
+        readyCount,
+        allReady
+      }
     });
   } catch (err) {
     console.error('Fehler beim Laden des Events:', err);
@@ -286,8 +307,30 @@ app.get('/api/events/:id/me', (req, res) => {
       }
     }
 
+    // Stats for the round
+    const statsRow = db.prepare(`
+      SELECT COUNT(*) AS totalCount,
+             SUM(CASE WHEN is_claimed = 1 THEN 1 ELSE 0 END) AS claimedCount,
+             SUM(CASE WHEN is_ready = 1 THEN 1 ELSE 0 END) AS readyCount
+      FROM participants
+      WHERE event_id = ?
+    `).get(eventId);
+
+    const totalCount = statsRow?.totalCount || 0;
+    const claimedCount = statsRow?.claimedCount || 0;
+    const readyCount = statsRow?.readyCount || 0;
+    const allReady = totalCount > 0 && readyCount === totalCount;
+
     res.json({
-      event,
+      event: {
+        id: event.id,
+        title: event.title,
+        description: event.description,
+        event_date: event.event_date,
+        max_budget: event.max_budget,
+        banner_url: event.banner_url,
+        is_drawn: event.is_drawn === 1
+      },
       participant: {
         id: participant.id,
         name: participant.name,
@@ -296,6 +339,12 @@ app.get('/api/events/:id/me', (req, res) => {
         wishlist_url: participant.wishlist_url,
         wishlist_updated_at: participant.wishlist_updated_at,
         is_ready: participant.is_ready === 1
+      },
+      stats: {
+        totalCount,
+        claimedCount,
+        readyCount,
+        allReady
       },
       target
     });

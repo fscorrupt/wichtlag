@@ -665,9 +665,18 @@ p {
 }
 
 .name-card.claimed {
-  opacity: 0.55;
-  cursor: not-allowed;
-  filter: grayscale(0.5);
+  opacity: 0.92;
+  cursor: pointer;
+}
+
+.name-card.claimed.ready {
+  border-color: rgba(16, 185, 129, 0.4);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.name-card.claimed.pending {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.06);
 }
 
 .name-card.selected {
