@@ -47,7 +47,7 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
 
         <button
           type="button"
-          className="btn btn-primary btn-lg btn-pill"
+          className="btn btn-primary btn-lg btn-pill hero-cta-btn"
           onClick={onCreateClick}
         >
           <span>Neue Aktion erstellen</span>
@@ -61,15 +61,16 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
           Gib den Aktions-Code oder den Einladungslink ein:
         </p>
 
-        <form onSubmit={handleJoinDirect} style={{ display: 'flex', gap: '8px' }}>
+        <form onSubmit={handleJoinDirect} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <input
             type="text"
             className="form-input"
+            style={{ flex: '1 1 180px' }}
             placeholder="Aktions-Code (z. B. a1b2c3d4)..."
             value={accessCode}
             onChange={(e) => setAccessCode(e.target.value)}
           />
-          <button type="submit" className="btn btn-secondary">
+          <button type="submit" className="btn btn-secondary btn-mobile-full" style={{ flex: '0 0 auto' }}>
             <span>Öffnen</span>
           </button>
         </form>

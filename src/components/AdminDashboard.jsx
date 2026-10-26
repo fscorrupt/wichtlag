@@ -282,7 +282,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
           {!event.is_drawn && (
             <button
               type="button"
-              className={`btn btn-lg ${stats.allReady ? 'btn-primary' : 'btn-secondary'}`}
+              className={`btn btn-lg btn-mobile-full ${stats.allReady ? 'btn-primary' : 'btn-secondary'}`}
               onClick={handleStartDraw}
               disabled={drawing || !validation.possible}
             >
@@ -337,6 +337,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
             return (
               <div
                 key={p.id}
+                className="participant-list-item"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -347,7 +348,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   borderRadius: 'var(--radius-md)'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="participant-info" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                   <div style={{
                     width: '38px',
                     height: '38px',
@@ -377,7 +378,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div className="participant-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {event.is_drawn ? (
                     p.has_wishlist ? (
                       <span className="badge badge-ready">Wunschzettel vorhanden</span>

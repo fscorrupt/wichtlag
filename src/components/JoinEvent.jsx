@@ -142,7 +142,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
           </div>
           <button
             type="button"
-            className="btn btn-success btn-sm"
+            className="btn btn-success btn-sm btn-mobile-full"
             onClick={() => onNavigateToPortal(existingToken)}
           >
             <span>Zu meinem Wunschzettel</span>
@@ -273,10 +273,10 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
               Sobald du diesen Namen wählst, ist er für andere gesperrt. Im nächsten Schritt kannst du deinen Wunschzettel ausfüllen – dieser kann auch nach der Auslosung jederzeit noch angepasst werden.
             </p>
 
-            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 type="button"
-                className="btn btn-outline"
+                className="btn btn-outline btn-mobile-full"
                 onClick={() => setSelectedParticipant(null)}
                 disabled={claiming}
               >
@@ -284,7 +284,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
               </button>
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-primary btn-mobile-full"
                 onClick={handleClaim}
                 disabled={claiming}
               >

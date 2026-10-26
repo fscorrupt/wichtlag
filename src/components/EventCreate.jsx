@@ -373,7 +373,7 @@ export default function EventCreate({ onCreated }) {
             )}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <button
               type="button"
               className="btn btn-outline"
@@ -482,13 +482,16 @@ export default function EventCreate({ onCreated }) {
               </p>
             ) : (
               <>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                  gap: '12px',
-                  alignItems: 'center',
-                  marginBottom: '12px'
-                }}>
+                <div
+                  className="exclusion-builder-grid"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                    gap: '12px',
+                    alignItems: 'center',
+                    marginBottom: '12px'
+                  }}
+                >
                   <div>
                     <label className="form-label" style={{ fontSize: '0.8rem' }}>Person A</label>
                     <select
@@ -503,7 +506,7 @@ export default function EventCreate({ onCreated }) {
                     </select>
                   </div>
 
-                  <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: '16px' }}>
+                  <div className="exclusion-arrow" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: '16px' }}>
                     darf nicht ziehen ➔
                   </div>
 
@@ -535,7 +538,7 @@ export default function EventCreate({ onCreated }) {
 
                   <button
                     type="button"
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm btn-mobile-full"
                     onClick={handleAddExclusion}
                     disabled={!exGiver || !exReceiver || exGiver === exReceiver}
                   >
@@ -585,7 +588,7 @@ export default function EventCreate({ onCreated }) {
           </div>
 
           {/* Navigation & Submit */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginTop: '16px' }}>
             <button
               type="button"
               className="btn btn-outline"
@@ -596,7 +599,7 @@ export default function EventCreate({ onCreated }) {
 
             <button
               type="submit"
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary btn-lg btn-mobile-full"
               disabled={loading || names.length < 2 || !drawValidation.possible}
             >
               <span>{loading ? 'Erstelle Aktion...' : 'Aktion erstellen'}</span>

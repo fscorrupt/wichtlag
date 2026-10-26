@@ -801,12 +801,309 @@ p {
   color: var(--text-muted);
 }
 
-/* Mobile Responsiveness */
+/* =====================================================================
+   COMPREHENSIVE MOBILE OPTIMIZATIONS (Smartphones & Tablets)
+   ===================================================================== */
+
+/* Touch-action and tap highlights */
+button, .btn, .name-card, .avatar-choice, .ready-card, .preset-card, .gift-box {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* Tablet & Mobile Breakpoints (max-width: 768px) */
+@media (max-width: 768px) {
+  /* Prevent background-attachment: fixed lag/stutter on iOS */
+  body {
+    background-attachment: scroll !important;
+  }
+
+  .app-container {
+    min-height: 100dvh;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  .form-input, .form-textarea, .form-select {
+    font-size: 16px !important;
+  }
+
+  .main-content {
+    padding: 16px 14px 70px 14px;
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: max(60px, calc(40px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* Smartphone Breakpoint (max-width: 640px) */
 @media (max-width: 640px) {
-  h1 { font-size: 1.8rem; }
-  h2 { font-size: 1.4rem; }
-  .glass-card { padding: 20px; }
-  .name-picker-grid { grid-template-columns: 1fr; }
-  .btn-lg { padding: 12px 20px; font-size: 1rem; }
-  .link-box { flex-direction: column; align-items: stretch; }
+  /* Navigation Bar with safe area insets */
+  .navbar {
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-bottom: 10px;
+  }
+
+  .brand-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-title {
+    font-size: 1.15rem;
+  }
+
+  .nav-actions .btn-pill {
+    padding: 7px 12px;
+    font-size: 0.82rem;
+  }
+
+  /* Fluid typography */
+  h1 {
+    font-size: clamp(1.5rem, 5.5vw, 1.85rem);
+    letter-spacing: -0.02em;
+  }
+
+  h2 {
+    font-size: clamp(1.2rem, 4.5vw, 1.45rem);
+  }
+
+  h3 {
+    font-size: clamp(1rem, 4vw, 1.2rem);
+  }
+
+  /* Cards & Containers */
+  .glass-card {
+    padding: 18px 14px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* Event Banner Display */
+  .event-banner-display {
+    min-height: 120px;
+    padding: 16px 14px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+  }
+
+  .event-banner-display h1 {
+    font-size: 1.4rem;
+  }
+
+  /* Form Elements */
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-input, .form-textarea, .form-select {
+    padding: 12px 14px;
+    border-radius: 12px;
+  }
+
+  /* Buttons */
+  .btn {
+    min-height: 42px;
+  }
+
+  .btn-lg {
+    padding: 12px 18px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+
+  .btn-mobile-full {
+    width: 100% !important;
+  }
+
+  /* Bookmark / Personal Access Link Card */
+  .bookmark-card {
+    padding: 16px 14px !important;
+  }
+
+  .bookmark-card .bookmark-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .bookmark-card .bookmark-btn {
+    width: 100% !important;
+    justify-content: center;
+  }
+
+  /* Ready Card */
+  .ready-card {
+    padding: 16px 14px !important;
+  }
+
+  .ready-card-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .ready-card-pill {
+    width: 100% !important;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Name Selection Grid */
+  .name-picker-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .name-card {
+    padding: 14px;
+  }
+
+  /* Presets & Avatars */
+  .preset-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px;
+  }
+
+  .avatar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    gap: 6px;
+  }
+
+  .avatar-choice {
+    width: 50px;
+    height: 50px;
+    font-size: 22px;
+  }
+
+  /* Secret Santa Reveal Box */
+  .reveal-wrapper {
+    padding: 24px 10px;
+  }
+
+  .gift-box {
+    width: 110px;
+    height: 110px;
+    margin-bottom: 20px;
+  }
+
+  .gift-icon-container {
+    font-size: 48px;
+    border-radius: 20px;
+  }
+
+  .revealed-target-card {
+    padding: 24px 14px;
+    border-radius: 18px;
+  }
+
+  .revealed-target-card h2 {
+    font-size: 1.5rem;
+  }
+
+  /* Link sharing boxes */
+  .link-box {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    word-break: break-all;
+  }
+
+  .link-box > div {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .link-box button {
+    flex: 1;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  /* Participant List in Admin Dashboard */
+  .participant-list-item {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  .participant-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Exclusion Builder Grid */
+  .exclusion-builder-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .exclusion-arrow {
+    text-align: center;
+    padding: 0 !important;
+    transform: rotate(90deg);
+    margin: 2px auto;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    padding: 20px 16px;
+    border-radius: 20px 20px 14px 14px;
+    max-height: 88vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hero Section */
+  .hero-cta-btn {
+    width: 100% !important;
+    max-width: 320px;
+  }
+}
+
+/* Very Small Smartphones (max-width: 380px) */
+@media (max-width: 380px) {
+  .brand-title {
+    font-size: 1.05rem;
+  }
+
+  .brand-link {
+    gap: 8px;
+  }
+
+  .main-content {
+    padding: 12px 10px 50px 10px;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+  }
+
+  .glass-card {
+    padding: 14px 12px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 0.86rem;
+  }
+
+  .badge {
+    padding: 2px 7px;
+    font-size: 0.72rem;
+  }
+
+  .preset-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
 }

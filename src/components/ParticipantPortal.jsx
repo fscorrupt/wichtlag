@@ -346,7 +346,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
 
       {/* Prominent Personal Bookmark Link */}
       <div
-        className="glass-card"
+        className="glass-card bookmark-card"
         style={{
           background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(217, 119, 6, 0.08) 100%)',
           border: '2px solid #f59e0b',
@@ -356,7 +356,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           marginBottom: '28px'
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
+        <div className="bookmark-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
             <div style={{
               width: '46px',
@@ -389,7 +389,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
 
           <button
             type="button"
-            className="btn btn-gold btn-lg"
+            className="btn btn-gold btn-lg bookmark-btn"
             onClick={handleCopyLink}
             style={{ padding: '10px 22px', fontSize: '0.98rem' }}
           >
@@ -535,6 +535,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         {/* Ready Card (Sehr präsent vor der Auslosung) */}
         {!event.is_drawn && (
           <div
+            className="ready-card"
             onClick={() => setIsReady(!isReady)}
             style={{
               background: isReady
@@ -549,7 +550,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
               transition: 'all 0.25s ease'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+            <div className="ready-card-inner" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
                 <input
                   type="checkbox"
@@ -591,17 +592,20 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                 </div>
               </div>
 
-              <div style={{
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
-                background: isReady ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.25)',
-                border: `1px solid ${isReady ? '#10b981' : '#f59e0b'}`,
-                color: isReady ? '#6ee7b7' : '#fef08a',
-                fontSize: '0.85rem',
-                fontWeight: 700,
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}>
+              <div
+                className="ready-card-pill"
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 'var(--radius-full)',
+                  background: isReady ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.25)',
+                  border: `1px solid ${isReady ? '#10b981' : '#f59e0b'}`,
+                  color: isReady ? '#6ee7b7' : '#fef08a',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+              >
                 {isReady ? 'Bereit' : 'Hier klicken'}
               </div>
             </div>
@@ -610,7 +614,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
 
         {/* Save Button */}
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <button type="submit" className="btn btn-primary" disabled={saving}>
+          <button type="submit" className="btn btn-primary btn-mobile-full" disabled={saving}>
             <Save size={16} />
             <span>
               {saving
