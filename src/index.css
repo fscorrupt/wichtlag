@@ -150,13 +150,13 @@ p {
   z-index: 100;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(10, 14, 23, 0.8);
-  border-bottom: 1px solid var(--surface-border);
-  padding: 14px 24px;
+  background: rgba(10, 14, 23, 0.75);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 12px 24px;
 }
 
 .navbar-inner {
-  max-width: 1100px;
+  max-width: 1050px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -166,18 +166,35 @@ p {
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   color: var(--text-main);
   font-family: var(--font-heading);
-  font-weight: 800;
-  font-size: 1.4rem;
-  letter-spacing: -0.03em;
-  transition: transform var(--transition-fast);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+  transition: opacity var(--transition-fast);
 }
 
 .brand-link:hover {
-  transform: scale(1.02);
+  opacity: 0.9;
+}
+
+.brand-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.brand-title {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
 }
 
 .brand-badge {
@@ -195,6 +212,148 @@ p {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.btn-pill {
+  border-radius: var(--radius-full);
+  padding: 8px 18px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Modern Workflow & Bento Feature Grid */
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .workflow-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 440px) {
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.workflow-step {
+  background: rgba(18, 24, 38, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 18px 16px;
+  transition: all var(--transition-fast);
+}
+
+.workflow-step:hover {
+  background: rgba(26, 34, 52, 0.65);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-2px);
+}
+
+.workflow-step-num {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent-gold);
+  margin-bottom: 6px;
+  display: block;
+  font-family: var(--font-heading);
+}
+
+.workflow-step h4 {
+  font-size: 0.98rem;
+  color: #ffffff;
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.workflow-step p {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  margin: 0;
+}
+
+.feature-bento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 36px;
+}
+
+.feature-bento-card {
+  background: rgba(18, 24, 38, 0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--radius-md);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-fast);
+}
+
+.feature-bento-card:hover {
+  background: rgba(24, 32, 50, 0.65);
+  border-color: rgba(255, 255, 255, 0.14);
+  transform: translateY(-2px);
+}
+
+.feature-bento-card.highlight-card {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(18, 24, 38, 0.65) 100%);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.feature-bento-card.highlight-card:hover {
+  border-color: rgba(245, 158, 11, 0.45);
+}
+
+.card-tag {
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  margin-bottom: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-secondary);
+}
+
+.card-tag.tag-gold {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #fbbf24;
+}
+
+.card-tag.tag-emerald {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.feature-bento-card h3 {
+  font-size: 1.05rem;
+  color: #ffffff;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.feature-bento-card p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
 }
 
 /* Cards & Containers (Glassmorphism) */

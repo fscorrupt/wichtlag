@@ -47,7 +47,7 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
 
         <button
           type="button"
-          className="btn btn-primary btn-lg"
+          className="btn btn-primary btn-lg btn-pill"
           onClick={onCreateClick}
         >
           <span>Neue Aktion erstellen</span>
@@ -55,7 +55,7 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
       </div>
 
       {/* Code / Link Entry */}
-      <div className="glass-card" style={{ maxWidth: '500px', margin: '0 auto 36px auto', textAlign: 'center', padding: '20px' }}>
+      <div className="glass-card" style={{ maxWidth: '480px', margin: '0 auto 40px auto', textAlign: 'center', padding: '22px' }}>
         <h3 style={{ fontSize: '1rem', marginBottom: '6px' }}>Bereits eingeladen?</h3>
         <p style={{ fontSize: '0.85rem', marginBottom: '14px', color: 'var(--text-muted)' }}>
           Gib den Aktions-Code oder den Einladungslink ein:
@@ -75,62 +75,79 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
         </form>
       </div>
 
-      {/* How it works & important guidance */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-        <div className="glass-card" style={{ padding: '22px' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
-            Ablauf in vier Schritten
-          </h3>
-          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
-            1. <strong>Erstellen:</strong> Titel, Datum, Budget und Namen eintragen.<br />
-            2. <strong>Einladen:</strong> Link in WhatsApp oder Signal teilen.<br />
-            3. <strong>Wünschen:</strong> Jeder wählt seinen Namen und füllt den Wunschzettel aus.<br />
-            4. <strong>Auslosen:</strong> Sobald alle fertig sind, startet der Admin die Auslosung.
+      {/* 4-Step Workflow Progression */}
+      <div style={{ marginBottom: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+          <span className="card-tag" style={{ margin: '0 auto 8px auto', display: 'inline-block' }}>Ablauf</span>
+          <h2 style={{ fontSize: '1.35rem', color: '#f8fafc', margin: 0 }}>In 4 einfachen Schritten</h2>
+        </div>
+
+        <div className="workflow-grid">
+          <div className="workflow-step">
+            <span className="workflow-step-num">01 // SCHRITT</span>
+            <h4>Erstellen</h4>
+            <p>Titel, Datum, Budget und Namen eintragen.</p>
+          </div>
+
+          <div className="workflow-step">
+            <span className="workflow-step-num">02 // SCHRITT</span>
+            <h4>Einladen</h4>
+            <p>Aktionslink per WhatsApp oder Signal teilen.</p>
+          </div>
+
+          <div className="workflow-step">
+            <span className="workflow-step-num">03 // SCHRITT</span>
+            <h4>Wünschen</h4>
+            <p>Eigenen Namen wählen und Wunschzettel ausfüllen.</p>
+          </div>
+
+          <div className="workflow-step">
+            <span className="workflow-step-num">04 // SCHRITT</span>
+            <h4>Auslosen</h4>
+            <p>Admin startet die Ziehung – jeder sieht sein Wichtelkind.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature Bento Grid */}
+      <div className="feature-bento-grid">
+        <div className="feature-bento-card highlight-card">
+          <span className="card-tag tag-gold">Wichtig // Lesezeichen</span>
+          <h3>Link unbedingt speichern!</h3>
+          <p>
+            Weil wir komplett auf E-Mails verzichten, gibt es keine Mail-Zustellung und keine Passwort-Rücksetzung. Speichert euren persönlichen Zugangslink als Lesezeichen, um jederzeit wiederzukehren.
           </p>
         </div>
 
-        <div className="glass-card" style={{ padding: '22px', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#fbbf24' }}>
-            Wichtig: Link speichern!
-          </h3>
-          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
-            Weil wir keine E-Mail-Adressen speichern, gibt es keinen Link per Mail und keine „Passwort vergessen“-Funktion. Sowohl Teilnehmer als auch der Admin müssen ihren persönlichen Zugangslink als Lesezeichen speichern, um später ihr Wichtelkind einsehen zu können.
+        <div className="feature-bento-card">
+          <span className="card-tag tag-emerald">Privatsphäre</span>
+          <h3>100% Geheim vor Admins</h3>
+          <p>
+            Der Organisator sieht nur, wer beigetreten ist und wer bereit ist. Die Auslosungs-Paarungen werden serverseitig so gefiltert, dass sie selbst für den Admin unsichtbar bleiben.
           </p>
         </div>
 
-        <div className="glass-card" style={{ padding: '22px' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
-            Admin sieht keine Zuteilungen
-          </h3>
-          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
-            Der Admin sieht in der Übersicht nur, wer beigetreten ist und ob der Wunschzettel ausgefüllt wurde. Wer wen beschenkt, bleibt auch für den Admin vollständig geheim – der Server filtert diese Daten für Admins strikt heraus.
+        <div className="feature-bento-card">
+          <span className="card-tag">Wunschzettel</span>
+          <h3>Wünsche & Shop-Links</h3>
+          <p>
+            Trage deine Geschenkideen als Text ein oder hinterlege einen direkten Link zu einer externen Wunschliste (z. B. Amazon oder wunschliste.de).
           </p>
         </div>
 
-        <div className="glass-card" style={{ padding: '22px' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
-            Ausschlüsse & automatische Löschung
-          </h3>
-          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
-            Paare oder Personen, die sich nicht gegenseitig beschenken sollen, können vorab ausgeschlossen werden. Zudem wird jede Aktion genau 14 Tage nach dem Aktionsdatum automatisch samt Bildern und Wunschzetteln rückstandslos gelöscht.
+        <div className="feature-bento-card">
+          <span className="card-tag">Sicherheit</span>
+          <h3>Ausschlüsse & 14-Tage-Löschung</h3>
+          <p>
+            Paare oder Personen, die sich nicht ziehen dürfen, werden vorab ausgeschlossen. Genau 14 Tage nach dem Event werden alle Daten und Bilder automatisch gelöscht.
           </p>
         </div>
 
-        <div className="glass-card" style={{ padding: '22px' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
-            Wunschzettel & externe Links
-          </h3>
-          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
-            Jeder Teilnehmer kann eigene Wünsche als Freitext eintragen oder einen direkten Link zu einer externen Wunschliste (z. B. Amazon, wunschliste.de) hinterlegen. So weiß das Wichtelkind genau, worüber sich der Beschenkte freut.
-          </p>
-        </div>
-
-        <div className="glass-card" style={{ padding: '22px' }}>
-          <h3 style={{ fontSize: '1.05rem', marginBottom: '8px', color: '#f8fafc' }}>
-            Keine App & keine Registrierung
-          </h3>
-          <p style={{ fontSize: '0.88rem', margin: 0, lineHeight: 1.6 }}>
-            WichtlAG läuft direkt im Browser – auf Smartphones, Tablets und PCs. Niemand muss ein Konto anlegen oder eine App aus dem App Store herunterladen. Link öffnen, Namen wählen und sofort loslegen.
+        <div className="feature-bento-card">
+          <span className="card-tag">Web-App</span>
+          <h3>Keine App & keine Registrierung</h3>
+          <p>
+            WichtlAG funktioniert direkt im Browser auf Smartphones, Tablets und PCs. Niemand muss ein Benutzerkonto anlegen oder eine App installieren.
           </p>
         </div>
       </div>
