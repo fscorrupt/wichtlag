@@ -311,15 +311,35 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
       {/* Waiting banner if NOT drawn yet */}
       {!event.is_drawn ? (
         <div style={{
-          background: 'rgba(56, 189, 248, 0.1)',
-          border: '1px solid rgba(56, 189, 248, 0.3)',
+          background: isReady ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+          border: `1.5px solid ${isReady ? '#10b981' : '#f59e0b'}`,
           borderRadius: 'var(--radius-md)',
           padding: '16px 20px',
-          marginBottom: '24px'
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '12px'
         }}>
-          <strong style={{ color: 'white', display: 'block', marginBottom: '4px' }}>Die Auslosung hat noch nicht begonnen.</strong>
-          <span style={{ fontSize: '0.85rem', color: '#bae6fd' }}>
-            Trage deine Wünsche ein und setze deinen Haken auf "Bereit". Hinweis: Du kannst deinen Wunschzettel auch nach der Auslosung jederzeit noch ändern und erweitern!
+          <div>
+            <strong style={{ color: 'white', display: 'block', marginBottom: '4px', fontSize: '1rem' }}>
+              {isReady ? 'Du bist bereit für die Auslosung!' : 'Die Auslosung wartet auf deine Bereitschaft'}
+            </strong>
+            <span style={{ fontSize: '0.88rem', color: isReady ? '#a7f3d0' : '#fef08a' }}>
+              {isReady
+                ? 'Super! Der Admin sieht deinen Status. Sobald alle bereit sind, startet die Auslosung.'
+                : 'Fülle deine Wünsche aus und setze deinen Haken auf "Bereit", damit der Admin das Wichteln starten kann.'}
+            </span>
+          </div>
+          <span className="badge" style={{
+            background: isReady ? '#10b981' : '#f59e0b',
+            color: '#1e1302',
+            fontWeight: 800,
+            padding: '6px 12px',
+            fontSize: '0.82rem'
+          }}>
+            {isReady ? 'Bereit gemeldet' : 'Noch nicht bereit'}
           </span>
         </div>
       ) : null}
@@ -512,31 +532,79 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           <span className="form-hint">Egal ob Amazon, Wunschliste.de oder Notion – füge einfach den Link ein.</span>
         </div>
 
-        {/* Ready Checkbox (nur vor der Auslosung relevant) */}
+        {/* Ready Card (Sehr präsent vor der Auslosung) */}
         {!event.is_drawn && (
-          <div style={{
-            background: 'rgba(10, 14, 23, 0.5)',
-            border: '1px solid var(--surface-border)',
-            borderRadius: 'var(--radius-md)',
-            padding: '16px',
-            marginBottom: '20px'
-          }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={isReady}
-                onChange={(e) => setIsReady(e.target.checked)}
-                style={{ width: '20px', height: '20px', accentColor: 'var(--accent-emerald)', cursor: 'pointer' }}
-              />
-              <div>
-                <strong style={{ color: 'white', display: 'block', fontSize: '0.95rem' }}>
-                  Ich bin fertig & bereit für die Auslosung!
-                </strong>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  Signalisiert dem Admin, dass du bereit bist. Du kannst deinen Wunschzettel auch nach der Auslosung jederzeit weiter anpassen.
-                </span>
+          <div
+            onClick={() => setIsReady(!isReady)}
+            style={{
+              background: isReady
+                ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.22) 0%, rgba(5, 150, 105, 0.12) 100%)'
+                : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.1) 100%)',
+              border: isReady ? '2px solid #10b981' : '2px solid #f59e0b',
+              boxShadow: isReady ? '0 0 24px rgba(16, 185, 129, 0.25)' : '0 0 24px rgba(245, 158, 11, 0.25)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '20px 24px',
+              marginBottom: '24px',
+              cursor: 'pointer',
+              transition: 'all 0.25s ease'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                <input
+                  type="checkbox"
+                  checked={isReady}
+                  onChange={(e) => setIsReady(e.target.checked)}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    width: '26px',
+                    height: '26px',
+                    accentColor: '#10b981',
+                    cursor: 'pointer',
+                    marginTop: '2px',
+                    flexShrink: 0
+                  }}
+                />
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
+                    <span className="badge" style={{
+                      background: isReady ? '#10b981' : '#f59e0b',
+                      color: '#1e1302',
+                      fontWeight: 800,
+                      padding: '3px 8px',
+                      fontSize: '0.78rem'
+                    }}>
+                      {isReady ? 'BEREIT' : 'WICHTIG FÜR DIE AUSLOSUNG'}
+                    </span>
+                    <strong style={{ color: '#ffffff', fontSize: '1.18rem', letterSpacing: '-0.01em' }}>
+                      Ich bin fertig & bereit für die Auslosung!
+                    </strong>
+                  </div>
+                  <p style={{
+                    fontSize: '0.92rem',
+                    color: isReady ? '#a7f3d0' : '#fef08a',
+                    margin: 0,
+                    lineHeight: '1.45'
+                  }}>
+                    Signalisiert dem Admin, dass du bereit bist. Du kannst deinen Wunschzettel auch nach der Auslosung jederzeit weiter anpassen.
+                  </p>
+                </div>
               </div>
-            </label>
+
+              <div style={{
+                padding: '6px 14px',
+                borderRadius: 'var(--radius-full)',
+                background: isReady ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.25)',
+                border: `1px solid ${isReady ? '#10b981' : '#f59e0b'}`,
+                color: isReady ? '#6ee7b7' : '#fef08a',
+                fontSize: '0.85rem',
+                fontWeight: 700,
+                whiteSpace: 'nowrap',
+                flexShrink: 0
+              }}>
+                {isReady ? 'Bereit' : 'Hier klicken'}
+              </div>
+            </div>
           </div>
         )}
 
