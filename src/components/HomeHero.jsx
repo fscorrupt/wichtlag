@@ -1,13 +1,23 @@
 import React, { useState } from 'react';
+import { ArrowDown, ArrowRight, Check, Gift, Link, ShieldCheck, Sparkles } from 'lucide-react';
+import confetti from 'canvas-confetti';
+import { BANNER_PRESETS } from '../constants/presets';
 
 export default function HomeHero({ onCreateClick, onNavigate }) {
   const [accessCode, setAccessCode] = useState('');
+  const [activeTheme, setActiveTheme] = useState(0);
+  const [surprise, setSurprise] = useState(-1);
+  const winterThemeIds = new Set(['preset:winterwald', 'preset:bergenacht', 'preset:nordlicht', 'preset:sternenhimmel', 'preset:hopfen', 'preset:eiskristall', 'preset:rotgold', 'preset:tannengruen']);
+  const themes = [
+    ...BANNER_PRESETS.filter((theme) => winterThemeIds.has(theme.id)),
+    ...BANNER_PRESETS.filter((theme) => !winterThemeIds.has(theme.id))
+  ];
+  const jokes = ['Plot Twist: Die Socken sind diesmal für dich.', 'Streng geheim. Sogar der Geschenkbeutel schweigt.', 'Budget: 20 €. Vorfreude: unbezahlbar.', 'Diese Runde enthält Spuren von Geschenkpapier.'];
 
-  const handleJoinDirect = (e) => {
-    e.preventDefault();
+  const handleJoinDirect = (event) => {
+    event.preventDefault();
     const clean = accessCode.trim();
     if (!clean) return;
-
     if (clean.includes('/event/')) {
       const match = clean.match(/\/event\/([a-zA-Z0-9]+)/);
       if (match && match[1]) {
@@ -18,148 +28,62 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
     onNavigate(`/event/${clean}/join`);
   };
 
+  const unwrapSurprise = () => {
+    setSurprise((previous) => (previous + 1) % jokes.length);
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      confetti({ particleCount: 65, spread: 65, origin: { y: 0.6 }, colors: ['#e8445a', '#76b4a1', '#edcc60', '#b8a8dc'], disableForReducedMotion: true });
+    }
+  };
+
   return (
-    <div>
-      {/* Hero Header */}
-      <div style={{ textAlign: 'center', padding: '24px 10px 36px 10px' }}>
-        <div style={{ marginBottom: '16px' }}>
-          <img
-            src="/logo.png"
-            alt="WichtlAG"
-            style={{
-              width: '110px',
-              height: '110px',
-              borderRadius: '50%',
-              objectFit: 'cover',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 6px 24px rgba(0, 0, 0, 0.4)'
-            }}
-          />
+    <div className="home-page">
+      <section className="home-hero" aria-labelledby="home-title">
+        <img className="hero-photo" src="/themes/cozy.jpg" alt="Liebevoll verpackte Geschenke für die nächste Wichtelrunde" fetchPriority="high" />
+        <div className="hero-shade" />
+        <div className="hero-copy">
+          <span className="eyebrow"><span className="live-dot" /> Kleine Geschenke. Große Vorfreude.</span>
+          <h1 id="home-title">WichtlAG<span>Verschenk ein<br />bisschen Freude.</span></h1>
+          <p>Für deine Lieblingsmenschen. Fürs Team. Für die Familie. Organisiere eure Wichtelrunde ganz entspannt, ohne Konto und ohne E-Mail.</p>
+          <button type="button" className="btn btn-primary btn-lg" onClick={onCreateClick}>Neue Aktion erstellen <ArrowRight size={19} /></button>
+          <div className="hero-assurances"><span><Check size={15} /> Ohne Registrierung</span><span><ShieldCheck size={15} /> Paarungen bleiben geheim</span></div>
         </div>
-
-        <h1 style={{ fontSize: '2.5rem', marginBottom: '12px', lineHeight: 1.2 }}>
-          WichtlAG
-        </h1>
-
-        <p style={{ fontSize: '1.1rem', maxWidth: '580px', margin: '0 auto 28px auto', color: 'var(--text-secondary)' }}>
-          Wichteln für Freunde, Familie und Kollegen. Ohne E-Mail-Adressen, ohne Benutzerkonten und mit garantiertem Schutz vor neugierigen Admins.
-        </p>
-
-        <button
-          type="button"
-          className="btn btn-primary btn-lg btn-pill hero-cta-btn"
-          onClick={onCreateClick}
-        >
-          <span>Neue Aktion erstellen</span>
-        </button>
-      </div>
-
-      {/* Code / Link Entry */}
-      <div className="glass-card" style={{ maxWidth: '480px', margin: '0 auto 40px auto', textAlign: 'center', padding: '22px' }}>
-        <h3 style={{ fontSize: '1rem', marginBottom: '6px' }}>Bereits eingeladen?</h3>
-        <p style={{ fontSize: '0.85rem', marginBottom: '14px', color: 'var(--text-muted)' }}>
-          Gib den Aktions-Code oder den Einladungslink ein:
-        </p>
-
-        <form onSubmit={handleJoinDirect} style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <input
-            type="text"
-            className="form-input"
-            style={{ flex: '1 1 180px' }}
-            placeholder="Aktions-Code (z. B. a1b2c3d4)..."
-            value={accessCode}
-            onChange={(e) => setAccessCode(e.target.value)}
-          />
-          <button type="submit" className="btn btn-secondary btn-mobile-full" style={{ flex: '0 0 auto' }}>
-            <span>Öffnen</span>
-          </button>
+        <button type="button" className="secret-gift" onClick={unwrapSurprise} aria-label="Kleine Überraschung auspacken" title="Was ist denn da drin?"><Gift size={28} /></button>
+        <div className="surprise-message" role="status">{surprise >= 0 ? jokes[surprise] : ''}</div>
+        <span className="hero-caption">Von Herzen. Nicht von der Stange.</span>
+      </section>
+      <section className="join-strip" aria-labelledby="join-title">
+        <div className="join-heading"><span className="join-icon"><Link size={20} /></span><div><h2 id="join-title">Du bist eingeladen?</h2><p>Deine Runde wartet schon auf dich.</p></div></div>
+        <form onSubmit={handleJoinDirect} className="join-form">
+          <label htmlFor="access-code" className="sr-only">Aktions-Code oder Einladungslink</label>
+          <input id="access-code" className="form-input" placeholder="Aktions-Code oder Einladungslink" value={accessCode} onChange={(event) => setAccessCode(event.target.value)} required />
+          <button type="submit" className="btn btn-ink">Dabei sein <ArrowRight size={17} /></button>
         </form>
-      </div>
-
-      {/* 4-Step Workflow Progression */}
-      <div style={{ marginBottom: '32px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-          <span className="card-tag" style={{ margin: '0 auto 8px auto', display: 'inline-block' }}>Ablauf</span>
-          <h2 style={{ fontSize: '1.35rem', color: '#f8fafc', margin: 0 }}>In 4 einfachen Schritten</h2>
+      </section>
+      <section className="occasion-section" aria-labelledby="occasion-title">
+        <div className="section-heading"><div><span className="eyebrow">Weihnachtlich wichteln. Und auch mal anders.</span><h2 id="occasion-title">Deine Runde. Euer Stil.</h2></div><a href="#theme-gallery" className="text-link">Lieblingslook finden <ArrowDown size={16} /></a></div>
+        <div className="theme-gallery" id="theme-gallery">
+          {themes.map((theme, index) => (
+            <button type="button" key={theme.id} className={`occasion-tile ${activeTheme === index ? 'active' : ''}`} onClick={() => setActiveTheme(index)} aria-pressed={activeTheme === index}>
+              <span className="occasion-image" style={{ background: theme.background }}><span className="theme-check"><Check size={15} /></span></span>
+              <span>{theme.name}</span>
+            </button>
+          ))}
         </div>
-
-        <div className="workflow-grid">
-          <div className="workflow-step">
-            <span className="workflow-step-num">01 // SCHRITT</span>
-            <h4>Erstellen</h4>
-            <p>Titel, Datum, Budget und Teilnehmer eintragen.</p>
-          </div>
-
-          <div className="workflow-step">
-            <span className="workflow-step-num">02 // SCHRITT</span>
-            <h4>Einladen</h4>
-            <p>Aktionslink per WhatsApp oder Signal teilen.</p>
-          </div>
-
-          <div className="workflow-step">
-            <span className="workflow-step-num">03 // SCHRITT</span>
-            <h4>Wünschen</h4>
-            <p>Namen wählen und Wunschzettel ausfüllen – jederzeit anpassbar.</p>
-          </div>
-
-          <div className="workflow-step">
-            <span className="workflow-step-num">04 // SCHRITT</span>
-            <h4>Auslosen</h4>
-            <p>Admin startet die Ziehung – jeder sieht geheim sein Wichtelkind.</p>
-          </div>
+        <div className="theme-selection"><Sparkles size={16} /><span>{themes[activeTheme].name} passt zu euch? Diesen Look findest du bei der Aktionserstellung.</span><button type="button" className="text-link" onClick={onCreateClick}>Los geht’s <ArrowRight size={16} /></button></div>
+      </section>
+      <section className="how-section" aria-labelledby="how-title">
+        <div className="section-heading"><div><span className="eyebrow">Weniger organisieren. Mehr freuen.</span><h2 id="how-title">Von „Wer macht mit?“ zu „Für dich!“</h2></div><span className="small-note">Vier Schritte bis zur Vorfreude.</span></div>
+        <div className="steps-grid">
+          {[
+            ['01', 'Runde starten', 'Name, Datum und Budget festlegen. Eure Lieblingsmenschen auf die Liste setzen.'],
+            ['02', 'Freude teilen', 'Einladungslink in euren Gruppenchat schicken. Jeder wählt seinen Namen.'],
+            ['03', 'Wünsche sammeln', 'Avatar aussuchen, Geschenkideen notieren und sich bereit melden.'],
+            ['04', 'Geheim auslosen', 'Die Organisation startet die Ziehung. Wer wen beschenkt, bleibt euer Geheimnis.']
+          ].map(([number, title, text]) => <div className="how-step" key={number}><span className="step-number">{number}</span><h3>{title}</h3><p>{text}</p></div>)}
         </div>
-      </div>
-
-      {/* Feature Bento Grid */}
-      <div className="feature-bento-grid">
-        <div className="feature-bento-card highlight-card">
-          <span className="card-tag tag-gold">Wichtig // Lesezeichen</span>
-          <h3>Link unbedingt speichern!</h3>
-          <p>
-            Weil wir komplett auf E-Mails verzichten, gibt es keine Mail-Zustellung und keine Passwörter. Speichert euren persönlichen Zugangslink als Lesezeichen oder im Chat, um jederzeit wiederzukehren.
-          </p>
-        </div>
-
-        <div className="feature-bento-card">
-          <span className="card-tag tag-emerald">Privatsphäre</span>
-          <h3>100% Geheim vor Admins</h3>
-          <p>
-            Der Organisator sieht nur, wer beigetreten und wer bereit ist. Die Auslosungs-Paarungen werden serverseitig so geschützt, dass sie selbst für den Admin unsichtbar bleiben.
-          </p>
-        </div>
-
-        <div className="feature-bento-card">
-          <span className="card-tag">Wunschzettel // Flexibel</span>
-          <h3>Wünsche auch nach Auslosung anpassbar</h3>
-          <p>
-            Trage Geschenkideen als Text oder Shop-Link ein (z. B. Amazon oder wunschliste.de). Wunschzettel können auch nach der Auslosung jederzeit weiter angepasst werden – dein Wichtel sieht die Änderungen sofort.
-          </p>
-        </div>
-
-        <div className="feature-bento-card">
-          <span className="card-tag">Admin // Kontrolle</span>
-          <h3>Nachträglich anpassbar</h3>
-          <p>
-            Banner, Notizen, Datum und Budget können vom Admin jederzeit aktualisiert werden. Vor der Auslosung können neue Teilnehmer flexibel hinzugefügt, umbenannt oder entfernt werden – ohne bestehende Links zu verändern.
-          </p>
-        </div>
-
-        <div className="feature-bento-card">
-          <span className="card-tag">Sicherheit</span>
-          <h3>Ausschlüsse & 14-Tage-Löschung</h3>
-          <p>
-            Personen, die sich nicht beschenken dürfen (z. B. Paare), werden vorab ausgeschlossen. Genau 14 Tage nach dem Event werden alle Daten und Uploads automatisch rückstandslos gelöscht.
-          </p>
-        </div>
-
-        <div className="feature-bento-card">
-          <span className="card-tag">Web-App // Mobil</span>
-          <h3>Perfekt für Smartphones & Tablets</h3>
-          <p>
-            WichtlAG ist voll für Mobiltelefone optimiert: Kein App-Download und keine Registrierung nötig. Einfach den Einladungslink per WhatsApp oder Signal öffnen und direkt teilnehmen.
-          </p>
-        </div>
-      </div>
+      </section>
+      <section className="trust-strip"><ShieldCheck size={25} /><div><h3>Ein gutes Gefühl gehört dazu.</h3><p>Keine Konten, keine E-Mail-Adressen. Die Paarungen bleiben auch für die Organisation verborgen. Eure Daten werden 14 Tage nach dem Event automatisch gelöscht.</p></div><span className="trust-seal">Weniger Daten.<br />Mehr Geheimnis.</span></section>
+      <div className="link-reminder"><Link size={16} /><p>Gut zu wissen: Dein persönlicher Link ist dein Zugang. Bewahre ihn auf, damit du jederzeit zu deinem Wunschzettel zurückkommst.</p></div>
     </div>
   );
 }

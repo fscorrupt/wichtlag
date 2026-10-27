@@ -209,6 +209,12 @@ export default function EventCreate({ onCreated }) {
         </p>
       </div>
 
+      <ol className="create-progress" aria-label="Fortschritt">
+        {['Eure Runde', 'Euer Look', 'Eure Menschen'].map((label, index) => (
+          <li key={label} className={step === index + 1 ? 'current' : step > index + 1 ? 'done' : ''} aria-current={step === index + 1 ? 'step' : undefined}><span>{step > index + 1 ? <CheckCircle2 size={16} /> : index + 1}</span>{label}</li>
+        ))}
+      </ol>
+
       {error && (
         <div style={{
           background: 'rgba(239, 68, 68, 0.15)',
@@ -336,9 +342,11 @@ export default function EventCreate({ onCreated }) {
           <label className="form-label">Wähle ein grafisches Thema:</label>
           <div className="preset-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', marginBottom: '16px' }}>
             {BANNER_PRESETS.map((preset) => (
-              <div
+              <button
+                type="button"
                 key={preset.id}
                 className={`preset-card ${bannerUrl === preset.id ? 'selected' : ''}`}
+                aria-pressed={bannerUrl === preset.id}
                 style={{
                   background: preset.background,
                   height: '75px',
@@ -352,7 +360,7 @@ export default function EventCreate({ onCreated }) {
                 <span style={{ fontSize: '0.82rem', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
                   {preset.name}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
 

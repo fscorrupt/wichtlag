@@ -6,7 +6,7 @@ export default function SnowEffect() {
       id: i,
       left: `${(i * 3.6 + Math.random() * 2).toFixed(1)}%`,
       animationDuration: `${(7 + Math.random() * 8).toFixed(1)}s`,
-      animationDelay: `${(Math.random() * 6).toFixed(1)}s`,
+      animationDelay: `-${(Math.random() * 15).toFixed(1)}s`,
       fontSize: `${(10 + Math.random() * 14).toFixed(0)}px`,
       opacity: (0.15 + Math.random() * 0.45).toFixed(2),
       char: ['❄', '❅', '❆', '•'][i % 4]

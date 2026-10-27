@@ -10,6 +10,15 @@ import ParticipantPortal from './components/ParticipantPortal';
 export default function App() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [currentSearch, setCurrentSearch] = useState(window.location.search);
+  const [appearance, setAppearance] = useState(() => {
+    try { return localStorage.getItem('wichtlag_appearance') === 'light' ? 'light' : 'dark'; }
+    catch { return 'dark'; }
+  });
+
+  useEffect(() => {
+    document.documentElement.dataset.appearance = appearance;
+    try { localStorage.setItem('wichtlag_appearance', appearance); } catch {}
+  }, [appearance]);
 
   // Sync state on browser back/forward
   useEffect(() => {
@@ -98,7 +107,7 @@ export default function App() {
   return (
     <div className="app-container">
       <SnowEffect />
-      <Navbar onNavigate={navigate} />
+      <Navbar onNavigate={navigate} appearance={appearance} onToggleAppearance={() => setAppearance(appearance === 'light' ? 'dark' : 'light')} />
 
       <main className="main-content">
         {renderContent()}
@@ -106,7 +115,7 @@ export default function App() {
 
       <footer className="footer">
         <p style={{ margin: 0 }}>
-          <strong>WichtlAG</strong> — Keine E-Mails, nur Links. Automatische Löschung 14 Tage nach dem Event.
+          <strong>WichtlAG.</strong> Mit Liebe verschenkt. Mit Links verbunden.
         </p>
       </footer>
     </div>

@@ -940,9 +940,11 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                 <label className="form-label">Aktions-Banner / Thema:</label>
                 <div className="preset-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', marginBottom: '12px' }}>
                   {BANNER_PRESETS.map((preset) => (
-                    <div
+                    <button
+                      type="button"
                       key={preset.id}
                       className={`preset-card ${editBannerUrl === preset.id ? 'selected' : ''}`}
+                      aria-pressed={editBannerUrl === preset.id}
                       style={{
                         background: preset.background,
                         height: '60px',
@@ -956,7 +958,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                       <span style={{ fontSize: '0.75rem', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
                         {preset.name}
                       </span>
-                    </div>
+                    </button>
                   ))}
                 </div>
 

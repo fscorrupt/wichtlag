@@ -1,6 +1,15 @@
 node_modules
 data
 dist
+state
 .git
 .env
+.env.*
 *.log
+/logo.png
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.sqlite-journal
+*.tmp
+*.temp

@@ -530,14 +530,17 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           <label className="form-label">Wähle dein Profilbild / Wichtel-Icon:</label>
           <div className="avatar-grid">
             {AVATAR_PRESETS.map((av) => (
-              <div
+              <button
+                type="button"
                 key={av.id}
                 className={`avatar-choice ${avatarUrl === av.id ? 'selected' : ''}`}
                 onClick={() => setAvatarUrl(av.id)}
                 title={av.label}
+                aria-label={av.label}
+                aria-pressed={avatarUrl === av.id}
               >
                 {av.emoji}
-              </div>
+              </button>
             ))}
           </div>
 

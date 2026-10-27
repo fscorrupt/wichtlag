@@ -13,9 +13,39 @@ const svgTannengruen = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/
 
 const svgNordlicht = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300' width='1000' height='300'%3E%3Cdefs%3E%3ClinearGradient id='sky' x1='0%25' y1='0%25' x2='0%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%23030712'/%3E%3Cstop offset='100%25' stop-color='%23042f2e'/%3E%3C/linearGradient%3E%3ClinearGradient id='aurora1' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' stop-color='%2310b981' stop-opacity='0'/%3E%3Cstop offset='30%25' stop-color='%2310b981' stop-opacity='0.45'/%3E%3Cstop offset='70%25' stop-color='%2306b6d4' stop-opacity='0.5'/%3E%3Cstop offset='100%25' stop-color='%236366f1' stop-opacity='0'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23sky)'/%3E%3Cg fill='%23ffffff' opacity='0.7'%3E%3Ccircle cx='120' cy='30' r='1'/%3E%3Ccircle cx='380' cy='20' r='1.5'/%3E%3Ccircle cx='620' cy='40' r='1'/%3E%3Ccircle cx='870' cy='25' r='1.5'/%3E%3C/g%3E%3Cpath d='M0 160 Q 250 80, 500 130 T 1000 90 L 1000 240 Q 750 180, 500 210 T 0 230 Z' fill='url(%23aurora1)' filter='blur(16px)'/%3E%3Cpath d='M0 260 L60 210 L140 260 L230 190 L340 260 L460 200 L580 260 L700 210 L820 260 L920 200 L1000 250 L1000 300 L0 300 Z' fill='%23021516'/%3E%3C/svg%3E`;
 
-const svgSternenhimmel = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300' width='1000' height='300'%3E%3Cdefs%3E%3ClinearGradient id='night' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2309090b'/%3E%3Cstop offset='50%25' stop-color='%23172554'/%3E%3Cstop offset='100%25' stop-color='%231e1b4b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23night)'/%3E%3Cg fill='%23fbbf24'%3E%3Ccircle cx='150' cy='70' r='2' opacity='0.9'/%3E%3Ccircle cx='180' cy='50' r='1.5' opacity='0.8'/%3E%3Ccircle cx='230' cy='90' r='2' opacity='0.95'/%3E%3Ccircle cx='280' cy='80' r='1.5' opacity='0.8'/%3E%3Ccircle cx='340' cy='110' r='2.5' opacity='1'/%3E%3Ccircle cx='410' cy='60' r='1.5' opacity='0.7'/%3E%3Ccircle cx='700' cy='50' r='2' opacity='0.9'/%3E%3Ccircle cx='750' cy='85' r='2.5' opacity='1'/%3E%3Ccircle cx='820' cy='65' r='1.5' opacity='0.8'/%3E%3Ccircle cx='890' cy='110' r='2' opacity='0.9'/%3E%3C/g%3E%3Cline x1='150' y1='70' x2='180' y2='50' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3Cline x1='180' y1='50' x2='230' y2='90' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3Cline x1='230' y1='90' x2='280' y2='80' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3Cline x1='280' y1='80' x2='340' y2='110' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3Cline x1='700' y1='50' x2='750' y2='85' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3Cline x1='750' y1='85' x2='820' y2='65' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3Cline x1='820' y1='65' x2='890' y2='110' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cpath d='M0 300 Q 300 260, 600 280 T 1000 270 L 1000 300 Z' fill='%23050814' opacity='0.8'/%3E%3C/svg%3E`;
+const svgSternenhimmel = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1000 300' width='1000' height='300'%3E%3Cdefs%3E%3ClinearGradient id='night' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%2309090b'/%3E%3Cstop offset='50%25' stop-color='%23172554'/%3E%3Cstop offset='100%25' stop-color='%231e1b4b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100%25' height='100%25' fill='url(%23night)'/%3E%3Cg fill='%23fbbf24'%3E%3Ccircle cx='150' cy='70' r='2' opacity='0.9'/%3E%3Ccircle cx='180' cy='50' r='1.5' opacity='0.8'/%3E%3Ccircle cx='230' cy='90' r='2' opacity='0.95'/%3E%3Ccircle cx='280' cy='80' r='1.5' opacity='0.8'/%3E%3Ccircle cx='340' cy='110' r='2.5' opacity='1'/%3E%3Ccircle cx='410' cy='60' r='1.5' opacity='0.7'/%3E%3Ccircle cx='700' cy='50' r='2' opacity='0.9'/%3E%3Ccircle cx='750' cy='85' r='2.5' opacity='1'/%3E%3Ccircle cx='820' cy='65' r='1.5' opacity='0.8'/%3E%3Ccircle cx='890' cy='110' r='2' opacity='0.9'/%3E%3C/g%3E%3Cline x1='150' y1='70' x2='180' y2='50' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cline x1='180' y1='50' x2='230' y2='90' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cline x1='230' y1='90' x2='280' y2='80' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cline x1='280' y1='80' x2='340' y2='110' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cline x1='700' y1='50' x2='750' y2='85' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cline x1='750' y1='85' x2='820' y2='65' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cline x1='820' y1='65' x2='890' y2='110' stroke='%23fef08a' stroke-width='0.7' opacity='0.35'/%3E%3Cpath d='M0 300 Q 300 260, 600 280 T 1000 270 L 1000 300 Z' fill='%23050814' opacity='0.8'/%3E%3C/svg%3E`;
 
 export const BANNER_PRESETS = [
+  {
+    id: 'preset:confetti',
+    name: 'Konfetti & gute Laune',
+    background: 'url("/themes/confetti.jpg") center/cover no-repeat'
+  },
+  {
+    id: 'preset:botanical',
+    name: 'Botanisch & entspannt',
+    background: 'url("/themes/botanical.jpg") center/cover no-repeat'
+  },
+  {
+    id: 'preset:cozy',
+    name: 'Geschenke & Gemütlichkeit',
+    background: 'url("/themes/cozy.jpg") center/cover no-repeat'
+  },
+  {
+    id: 'preset:summer',
+    name: 'Sommer & Sonnenschein',
+    background: 'url("/themes/summer.jpg") center/cover no-repeat'
+  },
+  {
+    id: 'preset:city',
+    name: 'Großstadt & Feierabend',
+    background: 'url("/themes/city.jpg") center/cover no-repeat'
+  },
+  {
+    id: 'preset:flowers',
+    name: 'Blumen & Frühlingsgefühle',
+    background: 'url("/themes/flowers.jpg") center/cover no-repeat'
+  },
   {
     id: 'preset:winterwald',
     name: 'Winterwald Silhouette',
@@ -59,6 +89,18 @@ export const BANNER_PRESETS = [
 ];
 
 export const AVATAR_PRESETS = [
+  { id: 'avatar:disco', label: 'Disco-Kugel', emoji: '🪩' },
+  { id: 'avatar:astronaut', label: 'Weltraumwichtel', emoji: '🧑‍🚀' },
+  { id: 'avatar:avocado', label: 'Avocado', emoji: '🥑' },
+  { id: 'avatar:pretzel', label: 'Brezel', emoji: '🥨' },
+  { id: 'avatar:rocket', label: 'Rakete', emoji: '🚀' },
+  { id: 'avatar:headphones', label: 'Musikfan', emoji: '🎧' },
+  { id: 'avatar:coffee', label: 'Kaffeepause', emoji: '☕' },
+  { id: 'avatar:rainbow', label: 'Regenbogen', emoji: '🌈' },
+  { id: 'avatar:cherry', label: 'Kirschen', emoji: '🍒' },
+  { id: 'avatar:robot', label: 'Geschenke-Bot', emoji: '🤖' },
+  { id: 'avatar:lemon', label: 'Zitrone', emoji: '🍋' },
+  { id: 'avatar:gaming', label: 'Gaming', emoji: '🎮' },
   { id: 'avatar:santa', label: 'Weihnachtsmann', emoji: '🎅' },
   { id: 'avatar:mrs_santa', label: 'Weihnachtsfrau', emoji: '🤶' },
   { id: 'avatar:elf', label: 'Wichtel', emoji: '🧝' },
