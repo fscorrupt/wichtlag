@@ -218,7 +218,9 @@ button:focus-visible, a:focus-visible, [tabindex]:focus-visible { outline: 3px s
 :root:not([data-appearance='dark']) .main-content [style*='color: rgb(251, 191, 36)'],
 :root:not([data-appearance='dark']) .main-content [style*='color: rgb(254, 243, 199)'] { color: #85610d !important; }
 :root:not([data-appearance='dark']) .main-content [style*='color: rgb(252, 165, 165)'] { color: #a52b3c !important; }
-:root:not([data-appearance='dark']) .main-content .banner-content :is(h1, h2, h3, h4, strong) { color: #fff !important; }
+.footer { padding: 28px 24px; text-align: center; border-top: 1px solid var(--surface-border); font-size: .82rem; color: var(--text-muted); }
+.footer-github-link { color: var(--text-muted); text-decoration: none; transition: color var(--transition-fast); }
+.footer-github-link:hover { color: var(--text-main); }
 @keyframes arrive { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 @media (min-width: 1500px) { .home-hero { min-height: 540px; padding-top: 65px; } }

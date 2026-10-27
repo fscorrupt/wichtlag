@@ -21,12 +21,14 @@ export const translations = {
       lightOffTitle: 'Licht aus',
       newEvent: 'Neue Aktion',
       switchLangAria: 'Sprache wechseln (aktuell: Deutsch)',
-      langLabel: 'EN'
+      langLabel: 'EN',
+      githubAria: 'WichtlAG auf GitHub ansehen'
     },
 
     // Footer
     footer: {
-      tagline: 'Mit Liebe verschenkt. Mit Links verbunden.'
+      tagline: 'Mit Liebe verschenkt. Mit Links verbunden.',
+      githubAria: 'WichtlAG Quellcode auf GitHub ansehen'
     },
 
     // Common Buttons & Labels
@@ -407,12 +409,14 @@ export const translations = {
       lightOffTitle: 'Lights off',
       newEvent: 'New Event',
       switchLangAria: 'Switch language (currently: English)',
-      langLabel: 'DE'
+      langLabel: 'DE',
+      githubAria: 'View WichtlAG on GitHub'
     },
 
     // Footer
     footer: {
-      tagline: 'Given with love. Connected with links.'
+      tagline: 'Given with love. Connected with links.',
+      githubAria: 'View WichtlAG source code on GitHub'
     },
 
     // Common Buttons & Labels
