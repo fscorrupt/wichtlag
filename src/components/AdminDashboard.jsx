@@ -4,11 +4,13 @@ import {
   QrCode, Share2, Play, Lock, Trash2, ShieldCheck, Clock, ExternalLink,
   Edit2, Plus, Pencil, Upload, X, RotateCcw
 } from 'lucide-react';
-import { BANNER_PRESETS, BUDGET_PRESETS, formatDate, AVATAR_PRESETS } from '../constants/presets';
+import { BANNER_PRESETS, BUDGET_PRESETS, AVATAR_PRESETS } from '../constants/presets';
 import QRCodeModal from './QRCodeModal';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../i18n';
 
 export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
+  const { t, formatDate, getThemeName } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,7 +46,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       const res = await fetch(`/api/events/${eventId}/admin?token=${adminToken}`);
       if (!res.ok) {
         const errJson = await res.json();
-        throw new Error(errJson.error || 'Fehler beim Laden des Admin-Bereichs.');
+        throw new Error(errJson.error || t('admin.accessDeniedTitle'));
       }
       const json = await res.json();
       setData(json);
@@ -58,7 +60,6 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
   useEffect(() => {
     if (eventId && adminToken) {
       fetchAdminData();
-      // Poll every 8 seconds so admin sees live when participants join or mark ready
       const interval = setInterval(fetchAdminData, 8000);
       return () => clearInterval(interval);
     }
@@ -97,7 +98,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       });
       const resData = await res.json();
       if (!res.ok) {
-        throw new Error(resData.error || 'Fehler beim Hochladen des Bildes.');
+        throw new Error(resData.error || t('create.errorUpload'));
       }
       setEditBannerUrl(resData.url);
     } catch (err) {
@@ -130,11 +131,11 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       const resJson = await res.json();
       if (!res.ok) {
-        throw new Error(resJson.error || 'Fehler beim Speichern der Aktions-Details.');
+        throw new Error(resJson.error || t('common.serverError'));
       }
 
       setShowEditModal(false);
-      setFeedbackMessage({ type: 'success', text: 'Aktions-Details & Banner wurden erfolgreich gespeichert!' });
+      setFeedbackMessage({ type: 'success', text: t('admin.savedSuccess') });
       await fetchAdminData();
     } catch (err) {
       setFeedbackMessage({ type: 'error', text: err.message });
@@ -161,11 +162,11 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       const resJson = await res.json();
       if (!res.ok) {
-        throw new Error(resJson.error || 'Fehler beim Hinzufügen des Teilnehmers.');
+        throw new Error(resJson.error || t('common.serverError'));
       }
 
       setNewParticipantName('');
-      setFeedbackMessage({ type: 'success', text: `Teilnehmer "${clean}" wurde erfolgreich hinzugefügt!` });
+      setFeedbackMessage({ type: 'success', text: t('admin.participantAddedSuccess', { name: clean }) });
       await fetchAdminData();
     } catch (err) {
       setFeedbackMessage({ type: 'error', text: err.message });
@@ -177,8 +178,8 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
   // Delete a participant
   const handleDeleteParticipant = async (p) => {
     const warning = p.is_claimed
-      ? `"${p.name}" ist bereits beigetreten und hat eventuell schon Wünsche hinterlegt.\n\nMöchtest du "${p.name}" wirklich unwiderruflich entfernen? Der persönliche Zugangslink wird ungültig. Bestehende andere Teilnehmer bleiben unverändert.`
-      : `Möchtest du "${p.name}" aus der Aktion entfernen?`;
+      ? t('admin.deleteParticipantClaimedConfirm', { name: p.name })
+      : t('admin.deleteParticipantUnclaimedConfirm', { name: p.name });
 
     if (!window.confirm(warning)) return;
 
@@ -189,10 +190,10 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       });
       const resJson = await res.json();
       if (!res.ok) {
-        throw new Error(resJson.error || 'Fehler beim Entfernen des Teilnehmers.');
+        throw new Error(resJson.error || t('common.serverError'));
       }
 
-      setFeedbackMessage({ type: 'success', text: `Teilnehmer "${p.name}" wurde entfernt.` });
+      setFeedbackMessage({ type: 'success', text: t('admin.participantDeletedSuccess', { name: p.name }) });
       await fetchAdminData();
     } catch (err) {
       setFeedbackMessage({ type: 'error', text: err.message });
@@ -201,9 +202,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
   // Reset participant claim (before draw)
   const handleResetParticipantClaim = async (p) => {
-    const confirmReset = window.confirm(
-      `Möchtest du den Beitritt von "${p.name}" wirklich freigeben?\n\nDer Name wird wieder als "frei" markiert, sodass die Person auf der Einladungsseite neu beitreten kann. (Aus Datenschutzgründen hat der Admin keinen Zugriff auf persönliche Zugangslinks).`
-    );
+    const confirmReset = window.confirm(t('admin.resetClaimConfirm', { name: p.name }));
     if (!confirmReset) return;
 
     setFeedbackMessage(null);
@@ -213,10 +212,10 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       });
       const resJson = await res.json();
       if (!res.ok) {
-        throw new Error(resJson.error || 'Fehler beim Zurücksetzen des Beitritts.');
+        throw new Error(resJson.error || t('common.serverError'));
       }
 
-      setFeedbackMessage({ type: 'success', text: `Beitritt für "${p.name}" wurde freigegeben.` });
+      setFeedbackMessage({ type: 'success', text: t('admin.resetClaimSuccess', { name: p.name }) });
       await fetchAdminData();
     } catch (err) {
       setFeedbackMessage({ type: 'error', text: err.message });
@@ -247,10 +246,10 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       const resJson = await res.json();
       if (!res.ok) {
-        throw new Error(resJson.error || 'Fehler beim Umbenennen des Teilnehmers.');
+        throw new Error(resJson.error || t('common.serverError'));
       }
 
-      setFeedbackMessage({ type: 'success', text: `Name wurde erfolgreich in "${clean}" geändert.` });
+      setFeedbackMessage({ type: 'success', text: t('admin.renameSuccess', { name: clean }) });
       setRenameParticipant(null);
       await fetchAdminData();
     } catch (err) {
@@ -262,7 +261,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
   // Delete an exclusion rule
   const handleDeleteExclusion = async (ex) => {
-    if (!window.confirm(`Ausschlussregel "${ex.giver_name} darf nicht ${ex.receiver_name}" wirklich löschen?`)) return;
+    if (!window.confirm(t('admin.deleteExclusionConfirm', { giver: ex.giver_name, receiver: ex.receiver_name }))) return;
 
     setFeedbackMessage(null);
     try {
@@ -271,7 +270,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       });
       if (!res.ok) {
         const resJson = await res.json();
-        throw new Error(resJson.error || 'Fehler beim Löschen des Ausschlusses.');
+        throw new Error(resJson.error || t('common.serverError'));
       }
 
       await fetchAdminData();
@@ -283,14 +282,10 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
   // Trigger Secret Santa draw
   const handleStartDraw = async () => {
     if (!data?.stats.allReady) {
-      const confirmForce = window.confirm(
-        'Nicht alle Teilnehmer haben ihren Wunschzettel als fertig markiert. Möchtest du die Auslosung trotzdem jetzt starten?\n\n(Hinweis: Alle Teilnehmer können ihre Wunschzettel auch nach der Auslosung weiterhin jederzeit ausfüllen und anpassen!)'
-      );
+      const confirmForce = window.confirm(t('admin.forceDrawConfirm'));
       if (!confirmForce) return;
     } else {
-      const confirmNormal = window.confirm(
-        'Möchtest du das Wichteln jetzt auslosen? Nach der Auslosung können keine weiteren Teilnehmer hinzugefügt oder Ausschlüsse geändert werden.\n\n(Hinweis: Wunschzettel können von allen Teilnehmern auch nach der Auslosung weiterhin jederzeit angepasst werden.)'
-      );
+      const confirmNormal = window.confirm(t('admin.normalDrawConfirm'));
       if (!confirmNormal) return;
     }
 
@@ -304,10 +299,10 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       const resData = await res.json();
 
       if (!res.ok) {
-        throw new Error(resData.error || 'Fehler bei der Auslosung.');
+        throw new Error(resData.error || t('common.serverError'));
       }
 
-      setDrawSuccessMessage(resData.message);
+      setDrawSuccessMessage(resData.message || t('admin.drawSuccessTitle'));
       confetti({
         particleCount: 80,
         spread: 70,
@@ -323,9 +318,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
   // Delete event manually
   const handleDeleteEvent = async () => {
-    const confirmDel = window.confirm(
-      'Möchtest du diese Wichtel-Aktion wirklich sofort unwiderruflich löschen?'
-    );
+    const confirmDel = window.confirm(t('admin.deleteEventConfirm'));
     if (!confirmDel) return;
 
     try {
@@ -333,20 +326,20 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
         method: 'DELETE'
       });
       if (res.ok) {
-        alert('Aktion wurde erfolgreich gelöscht.');
+        alert(t('admin.deleteEventSuccess'));
         onNavigate('/');
       } else {
-        alert('Fehler beim Löschen.');
+        alert(t('common.error'));
       }
     } catch (err) {
-      alert('Serverfehler beim Löschen.');
+      alert(t('common.serverError'));
     }
   };
 
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <p>Lade Admin-Dashboard...</p>
+        <p>{t('admin.loading')}</p>
       </div>
     );
   }
@@ -355,10 +348,10 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
     return (
       <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
         <AlertCircle size={48} color="#ef4444" style={{ margin: '0 auto 16px auto' }} />
-        <h2>Zugriff nicht möglich</h2>
+        <h2>{t('admin.accessDeniedTitle')}</h2>
         <p style={{ marginBottom: '20px' }}>{error}</p>
         <button type="button" className="btn btn-secondary" onClick={() => onNavigate('/')}>
-          Zur Startseite
+          {t('common.home')}
         </button>
       </div>
     );
@@ -388,15 +381,15 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white' }}>
-                Admin-Bereich
+                {t('admin.badgeAdmin')}
               </span>
               {event.is_drawn ? (
                 <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.9)', color: 'white' }}>
-                  ✓ Ausgelost
+                  {t('admin.badgeDrawn')}
                 </span>
               ) : (
                 <span className="badge" style={{ background: 'rgba(245, 158, 11, 0.9)', color: '#1e1302' }}>
-                  In Vorbereitung
+                  {t('admin.badgeInPrep')}
                 </span>
               )}
             </div>
@@ -414,7 +407,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
               }}
             >
               <Edit2 size={13} />
-              <span>Aktions-Details & Banner anpassen</span>
+              <span>{t('admin.editDetailsBtn')}</span>
             </button>
           </div>
 
@@ -422,8 +415,8 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
             {event.title}
           </h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem' }}>
-            <span>Bescherung: {formatDate(event.event_date)}</span>
-            {event.max_budget && <span>Budget: {event.max_budget}</span>}
+            <span>{t('admin.giftExchange', { date: formatDate(event.event_date) })}</span>
+            {event.max_budget && <span>{t('admin.budget', { budget: event.max_budget })}</span>}
           </div>
         </div>
       </div>
@@ -467,7 +460,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
         }}>
           <CheckCircle2 size={24} color="#10b981" style={{ flexShrink: 0 }} />
           <div>
-            <strong style={{ display: 'block', fontSize: '1rem', color: 'white' }}>Auslosung erfolgreich!</strong>
+            <strong style={{ display: 'block', fontSize: '1rem', color: 'white' }}>{t('admin.drawSuccessTitle')}</strong>
             <span style={{ fontSize: '0.9rem' }}>{drawSuccessMessage}</span>
           </div>
         </div>
@@ -477,7 +470,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       {event.description && (
         <div className="glass-card" style={{ marginBottom: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem', color: '#ffffff' }}>Notiz zur Aktion</h3>
+            <h3 style={{ margin: 0, fontSize: '1rem', color: '#ffffff' }}>{t('admin.noteTitle')}</h3>
             <button
               type="button"
               className="btn btn-outline btn-sm"
@@ -485,7 +478,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
               onClick={handleOpenEditModal}
             >
               <Edit2 size={12} />
-              <span>Bearbeiten</span>
+              <span>{t('common.edit')}</span>
             </button>
           </div>
           <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: '0.92rem', color: 'var(--text-secondary)' }}>
@@ -496,12 +489,12 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       {/* Share Links Card */}
       <div className="glass-card">
-        <h2 style={{ marginBottom: '16px' }}>Links zum Teilen & Verwalten</h2>
+        <h2 style={{ marginBottom: '16px' }}>{t('admin.shareLinksTitle')}</h2>
 
         <div style={{ marginBottom: '16px' }}>
           <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>Einladungslink für die Teilnehmer:</span>
-            <span className="form-hint">(Teile diesen Link in WhatsApp / Signal / Chat)</span>
+            <span>{t('admin.joinLinkPrompt')}</span>
+            <span className="form-hint">{t('admin.joinLinkHint')}</span>
           </label>
           <div className="link-box">
             <span>{joinUrl}</span>
@@ -512,7 +505,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                 onClick={() => handleCopy(joinUrl, 'join')}
               >
                 {copiedLink === 'join' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-                <span>{copiedLink === 'join' ? 'Kopiert' : 'Kopieren'}</span>
+                <span>{copiedLink === 'join' ? t('common.copied') : t('common.copy')}</span>
               </button>
               <button
                 type="button"
@@ -523,7 +516,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                 }}
               >
                 <QrCode size={14} />
-                <span>QR-Code</span>
+                <span>{t('admin.qrCodeBtn')}</span>
               </button>
             </div>
           </div>
@@ -531,8 +524,8 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
         <div>
           <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>Privater Admin-Link:</span>
-            <span className="form-hint">(Diesen Link NICHT mit der Gruppe teilen!)</span>
+            <span>{t('admin.adminLinkPrompt')}</span>
+            <span className="form-hint">{t('admin.adminLinkHint')}</span>
           </label>
           <div className="link-box">
             <span>{adminUrl}</span>
@@ -542,7 +535,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
               onClick={() => handleCopy(adminUrl, 'admin')}
             >
               {copiedLink === 'admin' ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-              <span>{copiedLink === 'admin' ? 'Kopiert' : 'Kopieren'}</span>
+              <span>{copiedLink === 'admin' ? t('common.copied') : t('common.copy')}</span>
             </button>
           </div>
         </div>
@@ -564,14 +557,14 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h2 style={{ marginBottom: '6px' }}>
-              {event.is_drawn ? 'Wichteln ist ausgelost!' : 'Status & Auslosung'}
+              {event.is_drawn ? t('admin.statusDrawnTitle') : t('admin.statusPrepTitle')}
             </h2>
             <p style={{ margin: 0 }}>
               {event.is_drawn
-                ? 'Jeder Teilnehmer kann ab sofort mit seinem Link sein gezogenes Wichtelkind einsehen. Wunschzettel können weiterhin jederzeit angepasst werden!'
+                ? t('admin.statusDrawnDesc')
                 : stats.allReady
-                ? 'Alle Teilnehmer sind beigetreten und haben ihren Wunschzettel ausgefüllt.'
-                : `Warte auf Teilnehmer: ${stats.readyCount} von ${stats.totalCount} bereit.`}
+                ? t('admin.statusAllReadyDesc')
+                : t('admin.statusWaitingDesc', { ready: stats.readyCount, total: stats.totalCount })}
             </p>
           </div>
 
@@ -583,7 +576,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
               disabled={drawing || !validation.possible}
             >
               <Play size={20} />
-              <span>{drawing ? 'Loste aus...' : 'Wichteln jetzt auslosen!'}</span>
+              <span>{drawing ? t('admin.drawingBtn') : t('admin.startDrawBtn')}</span>
             </button>
           )}
         </div>
@@ -619,17 +612,17 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
         marginBottom: '24px'
       }}>
         <span style={{ fontSize: '0.85rem', color: '#fef3c7' }}>
-          <strong>100% Geheim vor dem Admin:</strong> Aus Datenschutzgründen werden die persönlichen Zugangs-Links der Teilnehmer niemals an das Admin-Dashboard übertragen. Weder du noch sonst jemand kann vor oder nach der Auslosung einsehen, wer wen beschenkt.
+          {t('admin.privacyGuarantee')}
         </span>
       </div>
 
       {/* Participants Table with Add & Manage functionality */}
       <div className="glass-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>
-          <h2 style={{ margin: 0 }}>Teilnehmer-Status ({participants.length})</h2>
+          <h2 style={{ margin: 0 }}>{t('admin.participantsHeading', { count: participants.length })}</h2>
           {event.is_drawn && (
             <span style={{ fontSize: '0.82rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Lock size={13} /> Auslosung erfolgt (Teilnehmerliste fixiert)
+              <Lock size={13} /> {t('admin.listLocked')}
             </span>
           )}
         </div>
@@ -641,7 +634,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
               type="text"
               className="form-input"
               style={{ flex: '1 1 200px' }}
-              placeholder="Weiteren Teilnehmer hinzufügen (z. B. Lisa, Papa)..."
+              placeholder={t('admin.addParticipantPlaceholder')}
               value={newParticipantName}
               onChange={(e) => setNewParticipantName(e.target.value)}
               disabled={addingParticipant}
@@ -652,7 +645,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
               disabled={addingParticipant || !newParticipantName.trim()}
             >
               <Plus size={15} />
-              <span>{addingParticipant ? 'Füge hinzu...' : 'Teilnehmer hinzufügen'}</span>
+              <span>{addingParticipant ? t('admin.addingParticipantBtn') : t('admin.addParticipantBtn')}</span>
             </button>
           </form>
         )}
@@ -703,7 +696,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                         <button
                           type="button"
                           onClick={() => handleOpenRename(p)}
-                          title={`Name "${p.name}" korrigieren`}
+                          title={t('admin.editNameTitle', { name: p.name })}
                           style={{
                             background: 'transparent',
                             border: 'none',
@@ -719,7 +712,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                       )}
                     </div>
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                      {p.is_claimed ? 'Beigetreten' : 'Wartet auf Beitritt'}
+                      {p.is_claimed ? t('admin.joinedStatus') : t('admin.waitingJoinStatus')}
                     </span>
                   </div>
                 </div>
@@ -727,16 +720,16 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                 <div className="participant-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   {event.is_drawn ? (
                     p.has_wishlist ? (
-                      <span className="badge badge-ready">Wunschzettel vorhanden</span>
+                      <span className="badge badge-ready">{t('admin.badgeWishlistExists')}</span>
                     ) : (
-                      <span className="badge badge-empty">Noch keine Wünsche</span>
+                      <span className="badge badge-empty">{t('admin.badgeNoWishes')}</span>
                     )
                   ) : p.is_ready ? (
-                    <span className="badge badge-ready">Bereit</span>
+                    <span className="badge badge-ready">{t('admin.badgeReady')}</span>
                   ) : p.is_claimed ? (
-                    <span className="badge badge-pending">Wunschzettel unvollständig</span>
+                    <span className="badge badge-pending">{t('admin.badgeIncomplete')}</span>
                   ) : (
-                    <span className="badge badge-empty">Noch offen</span>
+                    <span className="badge badge-empty">{t('admin.badgePending')}</span>
                   )}
 
                   {/* Reset claim button (only before draw, if claimed) */}
@@ -745,7 +738,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                       type="button"
                       className="btn btn-outline btn-sm"
                       onClick={() => handleResetParticipantClaim(p)}
-                      title={`Beitritt von "${p.name}" zurücksetzen (Name wieder freigeben)`}
+                      title={t('admin.resetClaimTitle', { name: p.name })}
                       style={{ padding: '4px 8px', border: 'none', color: '#fbbf24' }}
                     >
                       <RotateCcw size={13} />
@@ -757,7 +750,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                     <button
                       type="button"
                       onClick={() => handleDeleteParticipant(p)}
-                      title={`Teilnehmer "${p.name}" entfernen`}
+                      title={t('admin.deleteParticipantTitle', { name: p.name })}
                       style={{
                         background: 'transparent',
                         border: 'none',
@@ -780,7 +773,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
       {/* Exclusions Summary */}
       <div className="glass-card">
-        <h3 style={{ marginBottom: '12px' }}>Hinterlegte Ausschlussregeln ({exclusions.length})</h3>
+        <h3 style={{ marginBottom: '12px' }}>{t('admin.exclusionsHeading', { count: exclusions.length })}</h3>
         {exclusions.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {exclusions.map((ex) => (
@@ -797,7 +790,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   gap: '6px'
                 }}
               >
-                <span>{ex.giver_name} darf nicht {ex.receiver_name}</span>
+                <span>{t('admin.exclusionRule', { giver: ex.giver_name, receiver: ex.receiver_name })}</span>
                 {!event.is_drawn && (
                   <button
                     type="button"
@@ -811,7 +804,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                       padding: '0',
                       color: 'var(--text-muted)'
                     }}
-                    title="Ausschlussregel entfernen"
+                    title={t('admin.deleteExclusionTitle')}
                   >
                     <X size={12} color="#f87171" />
                   </button>
@@ -820,14 +813,14 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: '0.85rem', margin: 0 }}>Keine Ausschlüsse aktiv.</p>
+          <p style={{ fontSize: '0.85rem', margin: 0 }}>{t('admin.noExclusions')}</p>
         )}
       </div>
 
       {/* Auto-Deletion Notice & Danger Zone */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', padding: '16px 0' }}>
         <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-          <span>Diese Aktion wird automatisch 14 Tage nach dem Aktionsdatum ({formatDate(event.event_date)}) gelöscht.</span>
+          <span>{t('admin.autoDeleteNotice', { date: formatDate(event.event_date) })}</span>
         </div>
 
         <button
@@ -837,7 +830,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
           onClick={handleDeleteEvent}
         >
           <Trash2 size={14} />
-          <span>Aktion sofort löschen</span>
+          <span>{t('admin.deleteEventBtn')}</span>
         </button>
       </div>
 
@@ -850,7 +843,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
             style={{ maxWidth: '620px', maxHeight: '90vh', overflowY: 'auto' }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0 }}>Aktions-Details & Banner anpassen</h3>
+              <h3 style={{ margin: 0 }}>{t('admin.editModalTitle')}</h3>
               <button
                 type="button"
                 onClick={() => setShowEditModal(false)}
@@ -871,13 +864,13 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                 fontSize: '0.82rem',
                 color: '#a7f3d0'
               }}>
-                <strong>Hinweis:</strong> Das Wichteln ist bereits ausgelost. Du kannst Titel, Datum, Budget, Notiz und Banner jederzeit anpassen, ohne dass die Auslosung oder die Wunschzettel der Teilnehmer beeinflusst werden.
+                {t('admin.editModalDrawnNote')}
               </div>
             )}
 
             <form onSubmit={handleSaveEventDetails}>
               <div className="form-group">
-                <label className="form-label">Titel der Aktion *</label>
+                <label className="form-label">{t('admin.editTitleLabel')}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -889,7 +882,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                 <div className="form-group">
-                  <label className="form-label">Aktionsdatum (Bescherung) *</label>
+                  <label className="form-label">{t('admin.editDateLabel')}</label>
                   <input
                     type="date"
                     className="form-input"
@@ -900,7 +893,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Budget (z. B. 20 €)</label>
+                  <label className="form-label">{t('admin.editBudgetLabel')}</label>
                   <input
                     type="text"
                     className="form-input"
@@ -925,47 +918,50 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Beschreibung / Notiz</label>
+                <label className="form-label">{t('admin.editDescLabel')}</label>
                 <textarea
                   className="form-textarea"
                   value={editDescription}
                   onChange={(e) => setEditDescription(e.target.value)}
                   rows={3}
-                  placeholder="z. B. Ort, Uhrzeit oder besondere Hinweise an die Gruppe..."
+                  placeholder={t('admin.editDescPlaceholder')}
                 />
               </div>
 
               {/* Banner Selector */}
               <div className="form-group">
-                <label className="form-label">Aktions-Banner / Thema:</label>
+                <label className="form-label">{t('admin.editBannerLabel')}</label>
                 <div className="preset-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', marginBottom: '12px' }}>
-                  {BANNER_PRESETS.map((preset) => (
-                    <button
-                      type="button"
-                      key={preset.id}
-                      className={`preset-card ${editBannerUrl === preset.id ? 'selected' : ''}`}
-                      aria-pressed={editBannerUrl === preset.id}
-                      style={{
-                        background: preset.background,
-                        height: '60px',
-                        display: 'flex',
-                        alignItems: 'flex-end',
-                        padding: '6px 10px',
-                        textAlign: 'left'
-                      }}
-                      onClick={() => setEditBannerUrl(preset.id)}
-                    >
-                      <span style={{ fontSize: '0.75rem', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
-                        {preset.name}
-                      </span>
-                    </button>
-                  ))}
+                  {BANNER_PRESETS.map((preset) => {
+                    const name = getThemeName(preset);
+                    return (
+                      <button
+                        type="button"
+                        key={preset.id}
+                        className={`preset-card ${editBannerUrl === preset.id ? 'selected' : ''}`}
+                        aria-pressed={editBannerUrl === preset.id}
+                        style={{
+                          background: preset.background,
+                          height: '60px',
+                          display: 'flex',
+                          alignItems: 'flex-end',
+                          padding: '6px 10px',
+                          textAlign: 'left'
+                        }}
+                        onClick={() => setEditBannerUrl(preset.id)}
+                      >
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+                          {name}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                   <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
                     <Upload size={14} />
-                    <span>{isUploadingBanner ? 'Lade hoch...' : 'Eigenes Bild hochladen'}</span>
+                    <span>{isUploadingBanner ? t('common.uploading') : t('common.uploadCustomImage')}</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -975,7 +971,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                     />
                   </label>
                   {editBannerUrl.startsWith('/uploads/') && (
-                    <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ Eigenes Bild aktiv</span>
+                    <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ {t('common.customImageActive')}</span>
                   )}
                 </div>
               </div>
@@ -987,14 +983,14 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   onClick={() => setShowEditModal(false)}
                   disabled={isSavingDetails}
                 >
-                  Abbrechen
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary btn-mobile-full"
                   disabled={isSavingDetails || !editTitle.trim() || !editEventDate}
                 >
-                  <span>{isSavingDetails ? 'Speichert...' : 'Änderungen speichern'}</span>
+                  <span>{isSavingDetails ? t('common.saving') : t('admin.saveChangesBtn')}</span>
                 </button>
               </div>
             </form>
@@ -1006,14 +1002,14 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       {renameParticipant && (
         <div className="modal-overlay" onClick={() => !renaming && setRenameParticipant(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
-            <h3 style={{ marginBottom: '8px' }}>Teilnehmer umbenennen</h3>
+            <h3 style={{ marginBottom: '8px' }}>{t('admin.renameModalTitle')}</h3>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-              Korrigiere den Namen von <strong>{renameParticipant.name}</strong>. Zugangslink, Wunschzettel und Status bleiben für diese Person unverändert erhalten.
+              {t('admin.renameModalDesc', { name: renameParticipant.name })}
             </p>
 
             <form onSubmit={handleSaveRename}>
               <div className="form-group">
-                <label className="form-label">Neuer Name</label>
+                <label className="form-label">{t('admin.renameModalLabel')}</label>
                 <input
                   type="text"
                   className="form-input"
@@ -1031,14 +1027,14 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   onClick={() => setRenameParticipant(null)}
                   disabled={renaming}
                 >
-                  Abbrechen
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="submit"
                   className="btn btn-primary btn-mobile-full"
                   disabled={renaming || !renameNewName.trim() || renameNewName.trim() === renameParticipant.name}
                 >
-                  <span>{renaming ? 'Speichert...' : 'Name speichern'}</span>
+                  <span>{renaming ? t('common.saving') : t('admin.saveNameBtn')}</span>
                 </button>
               </div>
             </form>
@@ -1050,7 +1046,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
       {showQrModal && (
         <QRCodeModal
           url={qrUrl}
-          title={`Einladung für "${event.title}"`}
+          title={t('modals.qrEventSubtitle', { title: event.title })}
           onClose={() => setShowQrModal(false)}
         />
       )}

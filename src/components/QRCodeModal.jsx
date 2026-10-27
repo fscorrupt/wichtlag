@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { X, Copy, Check } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 export default function QRCodeModal({ url, title, onClose }) {
+  const { t } = useTranslation();
   const [qrDataUrl, setQrDataUrl] = useState('');
   const [copied, setCopied] = useState(false);
 
@@ -31,7 +33,7 @@ export default function QRCodeModal({ url, title, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0 }}>QR-Code zum Beitreten</h3>
+          <h3 style={{ margin: 0 }}>{t('modals.qrTitle')}</h3>
           <button
             type="button"
             className="btn btn-outline btn-sm"
@@ -43,7 +45,7 @@ export default function QRCodeModal({ url, title, onClose }) {
         </div>
 
         <p style={{ fontSize: '0.9rem', marginBottom: '16px' }}>
-          {title || 'Scanne den Code mit deinem Smartphone, um der Wichtel-Aktion beizutreten:'}
+          {title || t('modals.qrDefaultSubtitle')}
         </p>
 
         {qrDataUrl && (
@@ -58,12 +60,12 @@ export default function QRCodeModal({ url, title, onClose }) {
           </span>
           <button type="button" className="btn btn-secondary btn-sm" onClick={handleCopy}>
             {copied ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
-            <span>{copied ? 'Kopiert' : 'Kopieren'}</span>
+            <span>{copied ? t('common.copied') : t('common.copy')}</span>
           </button>
         </div>
 
         <button type="button" className="btn btn-outline" style={{ width: '100%' }} onClick={onClose}>
-          Schließen
+          {t('common.close')}
         </button>
       </div>
     </div>

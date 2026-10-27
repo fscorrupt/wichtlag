@@ -6,8 +6,10 @@ import EventCreate from './components/EventCreate';
 import AdminDashboard from './components/AdminDashboard';
 import JoinEvent from './components/JoinEvent';
 import ParticipantPortal from './components/ParticipantPortal';
+import { useTranslation } from './i18n';
 
 export default function App() {
+  const { t } = useTranslation();
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [currentSearch, setCurrentSearch] = useState(window.location.search);
   const [appearance, setAppearance] = useState(() => {
@@ -115,7 +117,7 @@ export default function App() {
 
       <footer className="footer">
         <p style={{ margin: 0 }}>
-          <strong>WichtlAG.</strong> Mit Liebe verschenkt. Mit Links verbunden.
+          <strong>WichtlAG.</strong> {t('footer.tagline')}
         </p>
       </footer>
     </div>

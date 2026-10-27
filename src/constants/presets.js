@@ -121,13 +121,14 @@ export const AVATAR_PRESETS = [
 
 export const BUDGET_PRESETS = ['10 €', '15 €', '20 €', '25 €', '30 €', '50 €'];
 
-export function formatDate(dateString) {
+export function formatDate(dateString, locale) {
   if (!dateString) return '';
   try {
     const date = new Date(dateString + 'T00:00:00');
-    return new Intl.DateTimeFormat('de-DE', {
+    const resolvedLocale = locale || (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'en-US' : 'de-DE');
+    return new Intl.DateTimeFormat(resolvedLocale, {
       weekday: 'long',
-      day: '2-digit',
+      day: resolvedLocale.startsWith('en') ? 'numeric' : '2-digit',
       month: 'long',
       year: 'numeric'
     }).format(date);
@@ -136,11 +137,12 @@ export function formatDate(dateString) {
   }
 }
 
-export function formatShortDate(dateString) {
+export function formatShortDate(dateString, locale) {
   if (!dateString) return '';
   try {
     const date = new Date(dateString + 'T00:00:00');
-    return new Intl.DateTimeFormat('de-DE', {
+    const resolvedLocale = locale || (typeof document !== 'undefined' && document.documentElement.lang === 'en' ? 'en-US' : 'de-DE');
+    return new Intl.DateTimeFormat(resolvedLocale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'

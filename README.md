@@ -4,6 +4,10 @@
   <img src="public/logo.png" alt="WichtlAG Logo" width="120" />
 </p>
 
+<p align="center">
+  <strong>🇩🇪 Deutsch</strong> &nbsp;|&nbsp; <a href="README.en.md"><strong>🇬🇧 English</strong></a>
+</p>
+
 Kleine Geschenke. Große Vorfreude. WichtlAG ist eine selbstgehostete Wichtel-Web-App für Freunde, Familie und Teams: ohne Registrierung, ohne Passwörter und ohne E-Mail-Server. Einladungen und persönliche Zugänge funktionieren über Links. Die Organisation sieht den Stand der Runde, aber keine Auslosungs-Paarungen.
 
 ## Sneak Peek
@@ -108,6 +112,7 @@ Nach der Auslosung öffnet jeder über seinen persönlichen Zugang das Geschenk 
 - **Persönliche Wunschzettel:** Geschenkideen, Hinweise und ein Link zu einer externen Wunschliste.
 - **14 Themes und 28 Avatare:** Festliche Motive, weitere Anlässe und eigene Bilduploads.
 - **Winterdesign für Handy und PC:** Fallende Schneeflocken, gespeicherte Hell-/Dunkel-Auswahl, Touch-Bedienung und Berücksichtigung reduzierter Bewegung.
+- **Zweisprachig (DE / EN):** Umschalten mit einem Klick in der Navigation; alle Texte zentral in einer Datei (`src/i18n/translations.js`) pfleg- und erweiterbar.
 - **Kleine Überraschungen:** Im Geschenk-Symbol auf der Startseite verstecken sich Konfetti und wechselnde Sprüche.
 - **Automatisches Aufräumen:** Aktionsdaten und Uploads werden nach Ablauf der Aufbewahrungsfrist von 14 Tagen nach der Bescherung gelöscht.
 
@@ -220,6 +225,10 @@ Der Export verwendet dieselbe Playwright-Browserauswahl wie die Screenshots. Ans
 ### Themenfotos
 
 Die Fotos liegen lokal unter `public/themes`. Beim Seitenaufruf ist daher keine Verbindung zu Unsplash nötig. Originalquellen: [Geschenk](https://images.unsplash.com/photo-1513201099705-a9746e1e201f), [Party](https://images.unsplash.com/photo-1492684223066-81342ee5ff30), [Pflanzen](https://images.unsplash.com/photo-1416879595882-3373a0480b5b), [Sommer](https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1), [Großstadt](https://images.unsplash.com/photo-1519608487953-e999c86e7455) und [Blumen](https://images.unsplash.com/photo-1490750967868-88aa4486c946).
+
+### Übersetzungen und Lokalisierung (i18n)
+
+Alle Texte der gesamten Web-App sind zentral in `src/i18n/translations.js` gebündelt. Dort können sämtliche Texte auf Deutsch und Englisch angepasst oder weitere Sprachen hinzugefügt werden. Der Sprachwechsler in der Navigationsleiste schaltet zwischen den Sprachen um und speichert die Auswahl dauerhaft im Browser (`localStorage`).
 
 ## Lizenz
 

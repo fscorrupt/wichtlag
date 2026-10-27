@@ -2,8 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { Plus, Trash2, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { BANNER_PRESETS, BUDGET_PRESETS } from '../constants/presets';
 import { matchSecretSanta } from '../../server/matcher.js';
+import { useTranslation } from '../i18n';
 
 export default function EventCreate({ onCreated }) {
+  const { t, formatDate, getThemeName } = useTranslation();
   const [step, setStep] = useState(1);
 
   // Step 1: Eckdaten
@@ -31,11 +33,11 @@ export default function EventCreate({ onCreated }) {
   const handleNextFromStep1 = (e) => {
     e?.preventDefault();
     if (!title.trim()) {
-      setError('Bitte gib einen Titel für die Aktion ein.');
+      setError(t('create.errorTitleRequired'));
       return;
     }
     if (!eventDate) {
-      setError('Bitte wähle das Datum der Bescherung aus.');
+      setError(t('create.errorDateRequired'));
       return;
     }
     setError('');
@@ -54,7 +56,7 @@ export default function EventCreate({ onCreated }) {
     if (!trimmed) return;
 
     if (names.some((n) => n.toLowerCase() === trimmed.toLowerCase())) {
-      setError(`"${trimmed}" steht bereits in der Liste.`);
+      setError(t('create.errorNameExists', { name: trimmed }));
       return;
     }
 
@@ -74,7 +76,7 @@ export default function EventCreate({ onCreated }) {
   const handleAddExclusion = (e) => {
     e?.preventDefault();
     if (!exGiver || !exReceiver || exGiver === exReceiver) {
-      setError('Wähle zwei unterschiedliche Personen für den Ausschluss aus.');
+      setError(t('create.errorTwoPersonsRequired'));
       return;
     }
 
@@ -118,10 +120,10 @@ export default function EventCreate({ onCreated }) {
       if (res.ok && data.url) {
         setBannerUrl(data.url);
       } else {
-        setError(data.error || 'Fehler beim Hochladen.');
+        setError(data.error || t('create.errorUpload'));
       }
     } catch {
-      setError('Verbindung zum Server fehlgeschlagen.');
+      setError(t('common.serverError'));
     } finally {
       setIsUploadingBanner(false);
     }
@@ -130,7 +132,7 @@ export default function EventCreate({ onCreated }) {
   // Live validation of draw possibility
   const drawValidation = useMemo(() => {
     if (names.length < 2) {
-      return { possible: false, message: 'Mindestens 2 Teilnehmer erforderlich.' };
+      return { possible: false, message: t('create.validationMinParticipants') };
     }
 
     const simulatedParticipants = names.map((n, i) => ({ id: `p${i}`, name: n }));
@@ -143,23 +145,23 @@ export default function EventCreate({ onCreated }) {
     if (!testResult) {
       return {
         possible: false,
-        message: 'Mit diesen Ausschlussregeln ist keine vollständige Runde möglich. Bitte lockere die Regeln.'
+        message: t('create.validationImpossible')
       };
     }
 
-    return { possible: true, message: 'Auslosung mit allen Regeln problemlos möglich.' };
-  }, [names, exclusions]);
+    return { possible: true, message: t('create.validationPossible') };
+  }, [names, exclusions, t]);
 
   // Submit complete event
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim() || !eventDate) {
-      setError('Titel und Datum sind erforderlich.');
+      setError(t('create.errorTitleAndDateRequired'));
       setStep(1);
       return;
     }
     if (names.length < 2) {
-      setError('Es werden mindestens zwei Teilnehmer benötigt.');
+      setError(t('create.errorMinTwoParticipants'));
       return;
     }
     if (!drawValidation.possible) {
@@ -187,7 +189,7 @@ export default function EventCreate({ onCreated }) {
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Fehler beim Erstellen.');
+        throw new Error(data.error || t('create.errorUpload'));
       }
 
       onCreated(data.id, data.admin_token);
@@ -199,19 +201,27 @@ export default function EventCreate({ onCreated }) {
   };
 
   const selectedPreset = BANNER_PRESETS.find((p) => p.id === bannerUrl);
+  const stepLabels = t('create.steps') || ['Eure Runde', 'Euer Look', 'Eure Menschen'];
 
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto' }}>
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <h1 style={{ marginBottom: '6px' }}>Wichtel-Aktion anlegen</h1>
+        <h1 style={{ marginBottom: '6px' }}>{t('create.pageTitle')}</h1>
         <p style={{ margin: 0, fontSize: '0.95rem' }}>
-          Erstelle eure Wichtelrunde in wenigen Schritten.
+          {t('create.pageSubtitle')}
         </p>
       </div>
 
-      <ol className="create-progress" aria-label="Fortschritt">
-        {['Eure Runde', 'Euer Look', 'Eure Menschen'].map((label, index) => (
-          <li key={label} className={step === index + 1 ? 'current' : step > index + 1 ? 'done' : ''} aria-current={step === index + 1 ? 'step' : undefined}><span>{step > index + 1 ? <CheckCircle2 size={16} /> : index + 1}</span>{label}</li>
+      <ol className="create-progress" aria-label={t('create.progressLabel')}>
+        {stepLabels.map((label, index) => (
+          <li
+            key={label}
+            className={step === index + 1 ? 'current' : step > index + 1 ? 'done' : ''}
+            aria-current={step === index + 1 ? 'step' : undefined}
+          >
+            <span>{step > index + 1 ? <CheckCircle2 size={16} /> : index + 1}</span>
+            {label}
+          </li>
         ))}
       </ol>
 
@@ -235,14 +245,14 @@ export default function EventCreate({ onCreated }) {
       {/* SCHRITT 1: ECKDATEN */}
       {step === 1 && (
         <div className="glass-card">
-          <h2 style={{ fontSize: '1.3rem', marginBottom: '16px' }}>Eckdaten der Aktion</h2>
+          <h2 style={{ fontSize: '1.3rem', marginBottom: '16px' }}>{t('create.step1Title')}</h2>
 
           <div className="form-group">
-            <label className="form-label">Titel der Wichtelrunde *</label>
+            <label className="form-label">{t('create.titleLabel')}</label>
             <input
               type="text"
               className="form-input"
-              placeholder="z. B. Familie Wichteln 2026"
+              placeholder={t('create.titlePlaceholder')}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               autoFocus
@@ -251,22 +261,22 @@ export default function EventCreate({ onCreated }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
             <div className="form-group">
-              <label className="form-label">Aktionsdatum (Bescherung) *</label>
+              <label className="form-label">{t('create.dateLabel')}</label>
               <input
                 type="date"
                 className="form-input"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
               />
-              <span className="form-hint">Aktion wird 14 Tage nach diesem Tag automatisch gelöscht.</span>
+              <span className="form-hint">{t('create.dateHint')}</span>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Maximaler Wert (Budget)</label>
+              <label className="form-label">{t('create.budgetLabel')}</label>
               <input
                 type="text"
                 className="form-input"
-                placeholder="z. B. 20 €"
+                placeholder={t('create.budgetPlaceholder')}
                 value={maxBudget}
                 onChange={(e) => setMaxBudget(e.target.value)}
               />
@@ -287,10 +297,10 @@ export default function EventCreate({ onCreated }) {
           </div>
 
           <div className="form-group" style={{ marginBottom: '24px' }}>
-            <label className="form-label">Beschreibung / Notiz (optional)</label>
+            <label className="form-label">{t('create.descLabel')}</label>
             <textarea
               className="form-textarea"
-              placeholder="z. B. Treffpunkt, Uhrzeit oder besondere Hinweise an die Gruppe..."
+              placeholder={t('create.descPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -303,7 +313,7 @@ export default function EventCreate({ onCreated }) {
               className="btn btn-primary"
               onClick={handleNextFromStep1}
             >
-              <span>Weiter</span>
+              <span>{t('common.next')}</span>
             </button>
           </div>
         </div>
@@ -312,7 +322,7 @@ export default function EventCreate({ onCreated }) {
       {/* SCHRITT 2: TITELBILD */}
       {step === 2 && (
         <div className="glass-card">
-          <h2 style={{ fontSize: '1.3rem', marginBottom: '16px' }}>Aktions-Banner / Titelbild</h2>
+          <h2 style={{ fontSize: '1.3rem', marginBottom: '16px' }}>{t('create.step2Title')}</h2>
 
           {/* Banner Live-Vorschau */}
           <div
@@ -331,43 +341,46 @@ export default function EventCreate({ onCreated }) {
             <div className="banner-overlay" />
             <div className="banner-content">
               <h3 style={{ color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.7)', margin: '0 0 4px 0' }}>
-                {title || 'Vorschau Titelbild'}
+                {title || t('create.previewTitle')}
               </h3>
               <span style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.85)' }}>
-                {eventDate ? `Bescherung am ${eventDate}` : 'Datum noch offen'} • Budget: {maxBudget}
+                {eventDate ? t('create.previewDate', { date: formatDate(eventDate) }) : t('create.previewDateUnset')} • {t('create.previewBudget', { budget: maxBudget })}
               </span>
             </div>
           </div>
 
-          <label className="form-label">Wähle ein grafisches Thema:</label>
+          <label className="form-label">{t('create.themeLabel')}</label>
           <div className="preset-grid" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', marginBottom: '16px' }}>
-            {BANNER_PRESETS.map((preset) => (
-              <button
-                type="button"
-                key={preset.id}
-                className={`preset-card ${bannerUrl === preset.id ? 'selected' : ''}`}
-                aria-pressed={bannerUrl === preset.id}
-                style={{
-                  background: preset.background,
-                  height: '75px',
-                  display: 'flex',
-                  alignItems: 'flex-end',
-                  padding: '8px 12px',
-                  textAlign: 'left'
-                }}
-                onClick={() => setBannerUrl(preset.id)}
-              >
-                <span style={{ fontSize: '0.82rem', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
-                  {preset.name}
-                </span>
-              </button>
-            ))}
+            {BANNER_PRESETS.map((preset) => {
+              const name = getThemeName(preset);
+              return (
+                <button
+                  type="button"
+                  key={preset.id}
+                  className={`preset-card ${bannerUrl === preset.id ? 'selected' : ''}`}
+                  aria-pressed={bannerUrl === preset.id}
+                  style={{
+                    background: preset.background,
+                    height: '75px',
+                    display: 'flex',
+                    alignItems: 'flex-end',
+                    padding: '8px 12px',
+                    textAlign: 'left'
+                  }}
+                  onClick={() => setBannerUrl(preset.id)}
+                >
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, textShadow: '0 1px 4px rgba(0,0,0,0.9)' }}>
+                    {name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
             <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
               <Upload size={14} />
-              <span>{isUploadingBanner ? 'Lade hoch...' : 'Eigenes Bild hochladen'}</span>
+              <span>{isUploadingBanner ? t('common.uploading') : t('common.uploadCustomImage')}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -377,7 +390,7 @@ export default function EventCreate({ onCreated }) {
               />
             </label>
             {bannerUrl.startsWith('/uploads/') && (
-              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ Eigenes Bild aktiv</span>
+              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ {t('common.customImageActive')}</span>
             )}
           </div>
 
@@ -387,14 +400,14 @@ export default function EventCreate({ onCreated }) {
               className="btn btn-outline"
               onClick={() => setStep(1)}
             >
-              <span>Zurück</span>
+              <span>{t('common.back')}</span>
             </button>
             <button
               type="button"
               className="btn btn-primary"
               onClick={handleNextFromStep2}
             >
-              <span>Weiter</span>
+              <span>{t('common.next')}</span>
             </button>
           </div>
         </div>
@@ -406,17 +419,17 @@ export default function EventCreate({ onCreated }) {
           {/* Teilnehmer */}
           <div className="glass-card">
             <h2 style={{ fontSize: '1.3rem', marginBottom: '8px' }}>
-              Teilnehmer ({names.length})
+              {t('create.step3ParticipantsTitle', { count: names.length })}
             </h2>
             <p style={{ fontSize: '0.88rem', marginBottom: '16px', color: 'var(--text-secondary)' }}>
-              Trage die Namen aller Personen ein. Beim Beitreten wählt jeder Teilnehmer einfach seinen eigenen Namen aus.
+              {t('create.step3ParticipantsDesc')}
             </p>
 
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
               <input
                 type="text"
                 className="form-input"
-                placeholder="Name eingeben (z. B. Felix, Oma, Lukas)..."
+                placeholder={t('create.nameInputPlaceholder')}
                 value={nameInput}
                 onChange={(e) => setNameInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddName(e)}
@@ -427,7 +440,7 @@ export default function EventCreate({ onCreated }) {
                 onClick={handleAddName}
               >
                 <Plus size={16} />
-                <span>Hinzufügen</span>
+                <span>{t('create.addNameBtn')}</span>
               </button>
             </div>
 
@@ -461,7 +474,7 @@ export default function EventCreate({ onCreated }) {
                         alignItems: 'center',
                         padding: '2px'
                       }}
-                      title="Entfernen"
+                      title={t('common.remove')}
                     >
                       <Trash2 size={13} color="#f87171" />
                     </button>
@@ -470,7 +483,7 @@ export default function EventCreate({ onCreated }) {
               </div>
             ) : (
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                Noch keine Namen hinzugefügt. Gib oben einen Namen ein.
+                {t('create.noNamesYet')}
               </p>
             )}
           </div>
@@ -478,15 +491,15 @@ export default function EventCreate({ onCreated }) {
           {/* Ausschlussregeln */}
           <div className="glass-card">
             <h2 style={{ fontSize: '1.3rem', marginBottom: '8px' }}>
-              Ausschlussregeln ({exclusions.length})
+              {t('create.step3ExclusionsTitle', { count: exclusions.length })}
             </h2>
             <p style={{ fontSize: '0.88rem', marginBottom: '16px', color: 'var(--text-secondary)' }}>
-              Wer darf wen nicht beschenken? (z. B. Partner, Geschwister).
+              {t('create.step3ExclusionsDesc')}
             </p>
 
             {names.length < 2 ? (
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
-                Füge zuerst mindestens 2 Teilnehmer oben hinzu, um Ausschlüsse festzulegen.
+                {t('create.exclusionsMinParticipants')}
               </p>
             ) : (
               <>
@@ -501,13 +514,13 @@ export default function EventCreate({ onCreated }) {
                   }}
                 >
                   <div>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>Person A</label>
+                    <label className="form-label" style={{ fontSize: '0.8rem' }}>{t('create.personA')}</label>
                     <select
                       className="form-select"
                       value={exGiver}
                       onChange={(e) => setExGiver(e.target.value)}
                     >
-                      <option value="">– Wähle Person –</option>
+                      <option value="">{t('create.selectPerson')}</option>
                       {names.map((n) => (
                         <option key={n} value={n}>{n}</option>
                       ))}
@@ -515,17 +528,17 @@ export default function EventCreate({ onCreated }) {
                   </div>
 
                   <div className="exclusion-arrow" style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', paddingTop: '16px' }}>
-                    darf nicht ziehen ➔
+                    {t('create.cannotDrawArrow')}
                   </div>
 
                   <div>
-                    <label className="form-label" style={{ fontSize: '0.8rem' }}>Person B</label>
+                    <label className="form-label" style={{ fontSize: '0.8rem' }}>{t('create.personB')}</label>
                     <select
                       className="form-select"
                       value={exReceiver}
                       onChange={(e) => setExReceiver(e.target.value)}
                     >
-                      <option value="">– Wähle Person –</option>
+                      <option value="">{t('create.selectPerson')}</option>
                       {names.filter((n) => n !== exGiver).map((n) => (
                         <option key={n} value={n}>{n}</option>
                       ))}
@@ -541,7 +554,7 @@ export default function EventCreate({ onCreated }) {
                       onChange={(e) => setIsBidirectional(e.target.checked)}
                       style={{ accentColor: 'var(--primary-red)' }}
                     />
-                    <span>Gegenseitig ausschließen (A darf nicht B, und B darf nicht A)</span>
+                    <span>{t('create.bidirectionalLabel')}</span>
                   </label>
 
                   <button
@@ -551,7 +564,7 @@ export default function EventCreate({ onCreated }) {
                     disabled={!exGiver || !exReceiver || exGiver === exReceiver}
                   >
                     <Plus size={14} />
-                    <span>Ausschluss anlegen</span>
+                    <span>{t('create.addExclusionBtn')}</span>
                   </button>
                 </div>
 
@@ -560,7 +573,7 @@ export default function EventCreate({ onCreated }) {
                     {exclusions.map((ex, idx) => (
                       <div key={idx} className="exclusion-row" style={{ justifyContent: 'space-between', padding: '8px 12px' }}>
                         <span style={{ fontSize: '0.85rem' }}>
-                          <strong>{ex.giver_name}</strong> darf <strong>{ex.receiver_name}</strong> nicht ziehen
+                          <strong>{ex.giver_name}</strong> {t('create.cannotDrawArrow')} <strong>{ex.receiver_name}</strong>
                         </span>
                         <button
                           type="button"
@@ -602,7 +615,7 @@ export default function EventCreate({ onCreated }) {
               className="btn btn-outline"
               onClick={() => setStep(2)}
             >
-              <span>Zurück</span>
+              <span>{t('common.back')}</span>
             </button>
 
             <button
@@ -610,7 +623,7 @@ export default function EventCreate({ onCreated }) {
               className="btn btn-primary btn-lg btn-mobile-full"
               disabled={loading || names.length < 2 || !drawValidation.possible}
             >
-              <span>{loading ? 'Erstelle Aktion...' : 'Aktion erstellen'}</span>
+              <span>{loading ? t('create.submittingBtn') : t('create.submitBtn')}</span>
             </button>
           </div>
         </form>

@@ -1,7 +1,10 @@
 import React from 'react';
 import { X, ShieldCheck, Clock, Link2, EyeOff, Sparkles } from 'lucide-react';
+import { useTranslation } from '../i18n';
 
 export default function InfoModal({ onClose }) {
+  const { t } = useTranslation();
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '540px' }}>
@@ -14,7 +17,7 @@ export default function InfoModal({ onClose }) {
             }}>
               <ShieldCheck size={22} color="#ef4444" />
             </div>
-            <h3 style={{ margin: 0 }}>Über WichtlAG</h3>
+            <h3 style={{ margin: 0 }}>{t('modals.aboutTitle')}</h3>
           </div>
           <button type="button" className="btn btn-outline btn-sm" onClick={onClose} style={{ padding: '4px 8px' }}>
             <X size={18} />
@@ -25,9 +28,9 @@ export default function InfoModal({ onClose }) {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <EyeOff size={20} color="#fbbf24" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <strong style={{ color: 'var(--text-main)', display: 'block' }}>100% Admin-Geheimnis</strong>
+              <strong style={{ color: 'var(--text-main)', display: 'block' }}>{t('modals.feature1Title')}</strong>
               <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>
-                Selbst der Ersteller/Admin der Aktion kann niemals einsehen, wer wen zieht. Das Matching wird auf dem Server gespeichert, jedoch schützt die API-Architektur die Daten: Nur jeder Teilnehmer selbst kann mit seinem persönlichen Token sein Wichtelkind entschlüsseln.
+                {t('modals.feature1Desc')}
               </p>
             </div>
           </div>
@@ -35,9 +38,9 @@ export default function InfoModal({ onClose }) {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <Link2 size={20} color="#38bdf8" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <strong style={{ color: 'var(--text-main)', display: 'block' }}>Rein linkbasiert (Keine E-Mail nötig)</strong>
+              <strong style={{ color: 'var(--text-main)', display: 'block' }}>{t('modals.feature2Title')}</strong>
               <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>
-                Keine E-Mail-Adressen, kein SMTP-Server, keine Registrierung. Teile einfach den Einladungslink per WhatsApp, Signal oder QR-Code mit deiner Gruppe.
+                {t('modals.feature2Desc')}
               </p>
             </div>
           </div>
@@ -45,9 +48,9 @@ export default function InfoModal({ onClose }) {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <Clock size={20} color="#10b981" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <strong style={{ color: 'var(--text-main)', display: 'block' }}>Automatische Löschung nach 14 Tagen</strong>
+              <strong style={{ color: 'var(--text-main)', display: 'block' }}>{t('modals.feature3Title')}</strong>
               <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>
-                Genau 2 Wochen nach dem Aktionsdatum wird der Wichtel-Raum mitsamt allen Teilnehmerdaten, Wunschzetteln und Bildern automatisch vom Server unwiderruflich gelöscht.
+                {t('modals.feature3Desc')}
               </p>
             </div>
           </div>
@@ -55,16 +58,16 @@ export default function InfoModal({ onClose }) {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
             <Sparkles size={20} color="#e879f9" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
-              <strong style={{ color: 'var(--text-main)', display: 'block' }}>Smarte Ausschlussregeln</strong>
+              <strong style={{ color: 'var(--text-main)', display: 'block' }}>{t('modals.feature4Title')}</strong>
               <p style={{ margin: '2px 0 0 0', fontSize: '0.85rem' }}>
-                Definiere Paare oder Personen, die sich nicht gegenseitig beschenken dürfen (z. B. Partner, Geschwister). Ein intelligenter Graph-Algorithmus garantiert eine faire Kreis-Zuteilung.
+                {t('modals.feature4Desc')}
               </p>
             </div>
           </div>
         </div>
 
         <button type="button" className="btn btn-primary" style={{ width: '100%', marginTop: '24px' }} onClick={onClose}>
-          Verstanden
+          {t('common.gotIt')}
         </button>
       </div>
     </div>

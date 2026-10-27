@@ -3,10 +3,12 @@ import {
   Calendar, Euro, CheckCircle2, AlertCircle, Copy, Check, ExternalLink,
   Sparkles, Heart, Gift, Upload, Save, User, Lock, ArrowLeft, Bookmark
 } from 'lucide-react';
-import { BANNER_PRESETS, formatDate, AVATAR_PRESETS } from '../constants/presets';
+import { BANNER_PRESETS, AVATAR_PRESETS } from '../constants/presets';
 import confetti from 'canvas-confetti';
+import { useTranslation } from '../i18n';
 
 export default function ParticipantPortal({ eventId, token, onNavigate }) {
+  const { t, formatDate, getAvatarLabel } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,7 +33,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
       const res = await fetch(`/api/events/${eventId}/me?token=${token}`);
       if (!res.ok) {
         const errJson = await res.json();
-        throw new Error(errJson.error || 'Fehler beim Laden deines Profils.');
+        throw new Error(errJson.error || t('portal.invalidAccessTitle'));
       }
       const json = await res.json();
       setData(json);
@@ -77,7 +79,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
       });
 
       if (!res.ok) {
-        throw new Error('Fehler beim Speichern.');
+        throw new Error(t('common.serverError'));
       }
 
       setData((prev) => prev ? ({
@@ -114,14 +116,14 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         method: 'POST',
         body: formData
       });
-      const data = await res.json();
-      if (res.ok && data.url) {
-        setAvatarUrl(data.url);
+      const resData = await res.json();
+      if (res.ok && resData.url) {
+        setAvatarUrl(resData.url);
       } else {
-        alert(data.error || 'Fehler beim Upload des Avatars.');
+        alert(resData.error || t('create.errorUpload'));
       }
     } catch {
-      alert('Upload fehlgeschlagen.');
+      alert(t('portal.uploadFailed') || t('common.uploadFailed'));
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -147,7 +149,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <p>Lade deinen Wichtel-Zugang...</p>
+        <p>{t('portal.loading')}</p>
       </div>
     );
   }
@@ -156,10 +158,10 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
     return (
       <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
         <AlertCircle size={48} color="#ef4444" style={{ margin: '0 auto 16px auto' }} />
-        <h2>Zugang ungültig</h2>
+        <h2>{t('portal.invalidAccessTitle')}</h2>
         <p style={{ marginBottom: '20px' }}>{error}</p>
         <button type="button" className="btn btn-secondary" onClick={() => onNavigate(`/event/${eventId}/join`)}>
-          Zur Namensauswahl
+          {t('portal.backToJoinBtn')}
         </button>
       </div>
     );
@@ -187,11 +189,11 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         <div className="banner-content">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
             <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white' }}>
-              Hallo {participant.name}!
+              {t('portal.greeting', { name: participant.name })}
             </span>
             {Boolean(event.is_drawn) && (
               <span className="badge" style={{ background: '#10b981', color: 'white' }}>
-                Ausgelost
+                {t('portal.badgeDrawn')}
               </span>
             )}
           </div>
@@ -199,8 +201,8 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             {event.title}
           </h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem' }}>
-            <span>Bescherung: {formatDate(event.event_date)}</span>
-            {event.max_budget && <span>Budget: {event.max_budget}</span>}
+            <span>{t('portal.giftExchange', { date: formatDate(event.event_date) })}</span>
+            {event.max_budget && <span>{t('portal.budget', { budget: event.max_budget })}</span>}
           </div>
         </div>
       </div>
@@ -210,9 +212,9 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         <div className="glass-card" style={{ marginBottom: '28px', border: '2px solid var(--accent-gold)' }}>
           {!isRevealed ? (
             <div className="reveal-wrapper">
-              <h2 style={{ marginBottom: '12px' }}>Die Auslosung ist erfolgt! 🎁</h2>
+              <h2 style={{ marginBottom: '12px' }}>{t('portal.drawCompleteTitle')}</h2>
               <p style={{ maxWidth: '480px', margin: '0 auto 24px auto' }}>
-                Dein Wichtelkind steht fest! Klicke auf das geheimnisvolle Geschenk, um zu enthüllen, wen du beschenken darfst:
+                {t('portal.drawCompleteDesc')}
               </p>
 
               <div className="gift-box" onClick={handleReveal}>
@@ -223,13 +225,13 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
 
               <button type="button" className="btn btn-gold btn-lg" onClick={handleReveal}>
                 <Sparkles size={18} />
-                <span>Geschenk jetzt öffnen</span>
+                <span>{t('portal.openGiftBtn')}</span>
               </button>
             </div>
           ) : (
             <div className="revealed-target-card">
               <span className="badge" style={{ background: 'var(--accent-gold)', color: '#1e1302', fontWeight: 800, marginBottom: '12px' }}>
-                ✨ DEIN WICHTELKIND ✨
+                {t('portal.yourTargetBadge')}
               </span>
 
               <div style={{
@@ -255,11 +257,13 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
               </div>
 
               <h2 style={{ fontSize: '2rem', color: 'white', marginBottom: '8px' }}>
-                Du beschenkst: <span style={{ color: 'var(--accent-gold)' }}>{target.name}</span>
+                {t('portal.youGiftHeading', { name: target.name }).split(target.name)[0]}
+                <span style={{ color: 'var(--accent-gold)' }}>{target.name}</span>
+                {t('portal.youGiftHeading', { name: target.name }).split(target.name)[1] || ''}
               </h2>
 
               <p style={{ color: 'var(--text-secondary)', marginBottom: '24px' }}>
-                Behalte das Geheimnis für dich! Maximales Budget: <strong>{event.max_budget || 'Keines vorgegeben'}</strong>
+                {t('portal.keepSecretDesc', { budget: event.max_budget || t('portal.noBudgetLimit') })}
               </p>
 
               {/* Target Wishlist Box */}
@@ -273,10 +277,10 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
                   <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
-                    Wunschzettel von {target.name}:
+                    {t('portal.targetWishlistHeading', { name: target.name })}
                   </h3>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                    Live-Aktualisierung
+                    {t('portal.liveUpdate')}
                   </span>
                 </div>
 
@@ -286,7 +290,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                   </p>
                 ) : (
                   <p style={{ fontStyle: 'italic', color: 'var(--text-muted)', margin: 0 }}>
-                    {target.name} hat noch keine Wünsche eingetragen. Schau später noch einmal vorbei – Änderungen werden hier automatisch sichtbar!
+                    {t('portal.targetNoWishesYet', { name: target.name })}
                   </p>
                 )}
 
@@ -300,7 +304,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                       style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                     >
                       <ExternalLink size={14} />
-                      <span>Online-Wunschliste von {target.name} ansehen</span>
+                      <span>{t('portal.viewExternalListBtn', { name: target.name })}</span>
                     </a>
                   </div>
                 )}
@@ -324,12 +328,12 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
             <div>
               <h3 style={{ margin: '0 0 4px 0', fontSize: '1.1rem' }}>
-                Status & Auslosung
+                {t('portal.roundStatusTitle')}
               </h3>
               <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
                 {stats.allReady
-                  ? 'Alle Teilnehmer sind bereit! Der Organisator kann das Wichteln nun auslosen.'
-                  : `Warte auf Teilnehmer: ${stats.readyCount} von ${stats.totalCount} bereit.`}
+                  ? t('portal.roundAllReadyDesc')
+                  : t('portal.roundWaitingDesc', { ready: stats.readyCount, total: stats.totalCount })}
               </p>
             </div>
 
@@ -337,7 +341,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
               className={`badge ${stats.allReady ? 'badge-ready' : 'badge-pending'}`}
               style={{ padding: '6px 12px', fontSize: '0.85rem' }}
             >
-              {stats.readyCount} von {stats.totalCount} bereit
+              {t('portal.readyCountBadge', { ready: stats.readyCount, total: stats.totalCount })}
             </span>
           </div>
 
@@ -377,12 +381,12 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         }}>
           <div>
             <strong style={{ color: 'white', display: 'block', marginBottom: '4px', fontSize: '1rem' }}>
-              {isReady ? 'Du bist bereit für die Auslosung!' : 'Die Auslosung wartet auf deine Bereitschaft'}
+              {isReady ? t('portal.youAreReadyTitle') : t('portal.waitingForYouTitle')}
             </strong>
             <span style={{ fontSize: '0.88rem', color: isReady ? '#a7f3d0' : '#fef08a' }}>
               {isReady
-                ? 'Super! Der Admin sieht deinen Status. Sobald alle bereit sind, startet die Auslosung.'
-                : 'Fülle deine Wünsche aus und setze deinen Haken auf "Bereit", damit der Admin das Wichteln starten kann.'}
+                ? t('portal.youAreReadyDesc')
+                : t('portal.waitingForYouDesc')}
             </span>
           </div>
           <span className="badge" style={{
@@ -392,7 +396,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             padding: '6px 12px',
             fontSize: '0.82rem'
           }}>
-            {isReady ? 'Bereit gemeldet' : 'Noch nicht bereit'}
+            {isReady ? t('portal.readyMarkedBadge') : t('portal.notReadyBadge')}
           </span>
         </div>
       ) : null}
@@ -428,14 +432,14 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
                 <span className="badge" style={{ background: '#f59e0b', color: '#1e1302', fontWeight: 800, padding: '3px 8px' }}>
-                  WICHTIG
+                  {t('portal.importantBadge')}
                 </span>
                 <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#ffffff', letterSpacing: '-0.01em' }}>
-                  Dein persönlicher Zugangslink
+                  {t('portal.personalLinkTitle')}
                 </h3>
               </div>
               <p style={{ margin: 0, fontSize: '0.92rem', color: '#fef08a' }}>
-                Speichere dieses Lesezeichen, um jederzeit von jedem Gerät zurückzukehren.
+                {t('portal.personalLinkSubtitle')}
               </p>
             </div>
           </div>
@@ -447,7 +451,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             style={{ padding: '10px 22px', fontSize: '0.98rem' }}
           >
             {copiedLink ? <Check size={18} color="#1e1302" /> : <Copy size={18} />}
-            <span>{copiedLink ? 'Link kopiert!' : 'Link kopieren'}</span>
+            <span>{copiedLink ? t('portal.linkCopiedBtn') : t('portal.copyLinkBtn')}</span>
           </button>
         </div>
 
@@ -465,7 +469,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             gap: '12px',
             cursor: 'pointer'
           }}
-          title="Klicken zum Kopieren"
+          title={t('portal.clickToCopyHint')}
         >
           <span style={{
             fontFamily: 'monospace',
@@ -478,7 +482,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             {typeof window !== 'undefined' ? window.location.href : ''}
           </span>
           <span style={{ fontSize: '0.82rem', color: copiedLink ? '#34d399' : 'var(--accent-gold)', whiteSpace: 'nowrap', fontWeight: 700 }}>
-            {copiedLink ? 'Kopiert' : 'Klick = Kopieren'}
+            {copiedLink ? t('common.copied') : t('portal.clickToCopyHint')}
           </span>
         </div>
       </div>
@@ -486,9 +490,9 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
       {/* Profile & Wishlist Editor */}
       <form onSubmit={handleSave} className="glass-card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', marginBottom: '16px' }}>
-          <h2 style={{ margin: 0 }}>Dein Profil & Wunschzettel</h2>
+          <h2 style={{ margin: 0 }}>{t('portal.profileWishlistTitle')}</h2>
           <span className="badge" style={{ background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
-            Auch nach Auslosung anpassbar
+            {t('portal.editableAfterDrawBadge')}
           </span>
         </div>
 
@@ -501,7 +505,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           fontSize: '0.88rem',
           color: '#a7f3d0'
         }}>
-          <strong>Hinweis:</strong> Du kannst deinen Wunschzettel auch nach der Auslosung bis zur Bescherung jederzeit ändern oder ergänzen. Dein Wichtel sieht deine Aktualisierungen direkt.
+          {t('portal.wishlistNotice')}
         </div>
 
         {saveSuccess && (
@@ -519,35 +523,38 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             <CheckCircle2 size={18} />
             <span>
               {event.is_drawn
-                ? 'Wunschzettel erfolgreich aktualisiert! Dein Wichtel sieht deine Änderungen direkt.'
-                : 'Wunschzettel erfolgreich gespeichert!'}
+                ? t('portal.wishlistUpdatedSuccess')
+                : t('portal.wishlistSavedSuccess')}
             </span>
           </div>
         )}
 
         {/* Avatar Picker */}
         <div className="form-group">
-          <label className="form-label">Wähle dein Profilbild / Wichtel-Icon:</label>
+          <label className="form-label">{t('portal.chooseAvatarLabel')}</label>
           <div className="avatar-grid">
-            {AVATAR_PRESETS.map((av) => (
-              <button
-                type="button"
-                key={av.id}
-                className={`avatar-choice ${avatarUrl === av.id ? 'selected' : ''}`}
-                onClick={() => setAvatarUrl(av.id)}
-                title={av.label}
-                aria-label={av.label}
-                aria-pressed={avatarUrl === av.id}
-              >
-                {av.emoji}
-              </button>
-            ))}
+            {AVATAR_PRESETS.map((av) => {
+              const label = getAvatarLabel(av);
+              return (
+                <button
+                  type="button"
+                  key={av.id}
+                  className={`avatar-choice ${avatarUrl === av.id ? 'selected' : ''}`}
+                  onClick={() => setAvatarUrl(av.id)}
+                  title={label}
+                  aria-label={label}
+                  aria-pressed={avatarUrl === av.id}
+                >
+                  {av.emoji}
+                </button>
+              );
+            })}
           </div>
 
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
               <Upload size={14} />
-              <span>{isUploadingAvatar ? 'Lade hoch...' : 'Eigenes Foto hochladen'}</span>
+              <span>{isUploadingAvatar ? t('common.uploading') : t('common.uploadCustomPhoto')}</span>
               <input
                 type="file"
                 accept="image/*"
@@ -557,35 +564,35 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
               />
             </label>
             {avatarUrl.startsWith('/uploads/') && (
-              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>Eigenes Bild aktiv</span>
+              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>{t('common.customImageActive')}</span>
             )}
           </div>
         </div>
 
         {/* Wishlist Textarea */}
         <div className="form-group">
-          <label className="form-label">Meine Wünsche & Hinweise</label>
+          <label className="form-label">{t('portal.myWishesLabel')}</label>
           <textarea
             className="form-textarea"
-            placeholder="Was magst du? Hobbys, Kleidergröße, Lieblingsfarben, Schokolade, Teesorten... oder was du überhaupt nicht magst!"
+            placeholder={t('portal.myWishesPlaceholder')}
             value={wishlistText}
             onChange={(e) => setWishlistText(e.target.value)}
             rows={5}
           />
-          <span className="form-hint">Du kannst deine Wünsche auch nach der Auslosung jederzeit anpassen oder ergänzen.</span>
+          <span className="form-hint">{t('portal.myWishesHint')}</span>
         </div>
 
         {/* Wishlist External Link */}
         <div className="form-group">
-          <label className="form-label">Link zu deiner externen Wunschliste (optional)</label>
+          <label className="form-label">{t('portal.externalWishlistLabel')}</label>
           <input
             type="url"
             className="form-input"
-            placeholder="https://www.amazon.de/hz/wishlist/ls/... oder wunschliste.de"
+            placeholder={t('portal.externalWishlistPlaceholder')}
             value={wishlistUrl}
             onChange={(e) => setWishlistUrl(e.target.value)}
           />
-          <span className="form-hint">Egal ob Amazon, Wunschliste.de oder Notion – füge einfach den Link ein.</span>
+          <span className="form-hint">{t('portal.externalWishlistHint')}</span>
         </div>
 
         {/* Ready Card (Sehr präsent vor der Auslosung) */}
@@ -631,10 +638,10 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                       padding: '3px 8px',
                       fontSize: '0.78rem'
                     }}>
-                      {isReady ? 'BEREIT' : 'WICHTIG FÜR DIE AUSLOSUNG'}
+                      {isReady ? t('portal.readyCardBadgeReady') : t('portal.readyCardBadgeImportant')}
                     </span>
                     <strong style={{ color: '#ffffff', fontSize: '1.18rem', letterSpacing: '-0.01em' }}>
-                      Ich bin fertig & bereit für die Auslosung!
+                      {t('portal.readyCardTitle')}
                     </strong>
                   </div>
                   <p style={{
@@ -643,7 +650,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                     margin: 0,
                     lineHeight: '1.45'
                   }}>
-                    Signalisiert dem Admin, dass du bereit bist. Du kannst deinen Wunschzettel auch nach der Auslosung jederzeit weiter anpassen.
+                    {t('portal.readyCardDesc')}
                   </p>
                 </div>
               </div>
@@ -662,7 +669,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
                   flexShrink: 0
                 }}
               >
-                {isReady ? 'Bereit' : 'Hier klicken'}
+                {isReady ? t('portal.readyCardPillReady') : t('portal.readyCardPillClick')}
               </div>
             </div>
           </div>
@@ -674,10 +681,10 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             <Save size={16} />
             <span>
               {saving
-                ? 'Speichere...'
+                ? t('portal.savingBtn')
                 : event.is_drawn
-                ? 'Wunschzettel jetzt aktualisieren'
-                : 'Änderungen speichern'}
+                ? t('portal.updateWishlistBtn')
+                : t('portal.saveChangesBtn')}
             </span>
           </button>
         </div>

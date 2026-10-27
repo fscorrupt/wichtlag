@@ -3,9 +3,11 @@ import {
   Calendar, Euro, Users, CheckCircle2, AlertCircle, ArrowRight,
   ShieldCheck, Lock, UserCheck
 } from 'lucide-react';
-import { BANNER_PRESETS, formatDate, AVATAR_PRESETS } from '../constants/presets';
+import { BANNER_PRESETS, AVATAR_PRESETS } from '../constants/presets';
+import { useTranslation } from '../i18n';
 
 export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
+  const { t, formatDate, getAvatarLabel } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -21,7 +23,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
       try {
         const res = await fetch(`/api/events/${eventId}`);
         if (!res.ok) {
-          throw new Error('Wichtel-Aktion nicht gefunden oder abgelaufen.');
+          throw new Error(t('join.errorNotFound'));
         }
         const json = await res.json();
         setData(json);
@@ -35,7 +37,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
     fetchEvent();
     const interval = setInterval(fetchEvent, 8000);
     return () => clearInterval(interval);
-  }, [eventId]);
+  }, [eventId, t]);
 
   const handleClaim = async () => {
     if (!selectedParticipant) return;
@@ -51,7 +53,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
 
       const resData = await res.json();
       if (!res.ok) {
-        throw new Error(resData.error || 'Fehler beim Auswählen des Namens.');
+        throw new Error(resData.error || t('join.errorClaiming'));
       }
 
       // Store token in localStorage
@@ -73,7 +75,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <p>Lade Wichtel-Aktion...</p>
+        <p>{t('join.loading')}</p>
       </div>
     );
   }
@@ -82,10 +84,10 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
     return (
       <div className="glass-card" style={{ textAlign: 'center', padding: '40px 20px' }}>
         <AlertCircle size={48} color="#ef4444" style={{ margin: '0 auto 16px auto' }} />
-        <h2>Aktion nicht gefunden</h2>
+        <h2>{t('join.notFoundTitle')}</h2>
         <p style={{ marginBottom: '20px' }}>{error}</p>
         <button type="button" className="btn btn-secondary" onClick={() => window.location.href = '/'}>
-          Zur Startseite
+          {t('common.home')}
         </button>
       </div>
     );
@@ -110,14 +112,14 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
         <div className="banner-overlay" />
         <div className="banner-content">
           <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.9)', color: 'white', marginBottom: '8px' }}>
-            Einladung zum Wichteln
+            {t('join.bannerBadge')}
           </span>
           <h1 style={{ color: 'white', textShadow: '0 2px 10px rgba(0,0,0,0.7)', marginBottom: '4px' }}>
             {event.title}
           </h1>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', color: 'rgba(255,255,255,0.9)', fontSize: '0.9rem' }}>
-            <span>Bescherung: {formatDate(event.event_date)}</span>
-            {event.max_budget && <span>Budget: {event.max_budget}</span>}
+            <span>{t('join.giftExchange', { date: formatDate(event.event_date) })}</span>
+            {event.max_budget && <span>{t('join.budget', { budget: event.max_budget })}</span>}
           </div>
         </div>
       </div>
@@ -137,9 +139,9 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
           gap: '12px'
         }}>
           <div>
-            <strong style={{ color: 'white', display: 'block' }}>Du nimmst bereits an dieser Aktion teil!</strong>
+            <strong style={{ color: 'white', display: 'block' }}>{t('join.alreadyJoinedTitle')}</strong>
             <span style={{ fontSize: '0.85rem', color: '#a7f3d0' }}>
-              Dein Zugang wurde auf diesem Gerät gespeichert.
+              {t('join.alreadyJoinedDesc')}
             </span>
           </div>
           <button
@@ -147,7 +149,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
             className="btn btn-success btn-sm btn-mobile-full"
             onClick={() => onNavigateToPortal(existingToken)}
           >
-            <span>Zu meinem Wunschzettel</span>
+            <span>{t('join.goToMyWishlist')}</span>
             <ArrowRight size={14} />
           </button>
         </div>
@@ -156,7 +158,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
       {/* Description */}
       {event.description && (
         <div className="glass-card" style={{ marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '8px' }}>Notiz zur Aktion</h3>
+          <h3 style={{ marginBottom: '8px' }}>{t('join.noteTitle')}</h3>
           <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontSize: '0.95rem' }}>{event.description}</p>
         </div>
       )}
@@ -191,14 +193,14 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h3 style={{ margin: '0 0 6px 0', fontSize: '1.15rem' }}>
-              {event.is_drawn ? 'Wichteln ist ausgelost!' : 'Status & Auslosung'}
+              {event.is_drawn ? t('join.statusDrawn') : t('join.statusPrep')}
             </h3>
             <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
               {event.is_drawn
-                ? 'Das Wichteln wurde ausgelost! Jeder Teilnehmer kann über seinen persönlichen Zugang sein Wichtelkind einsehen.'
+                ? t('join.descDrawn')
                 : stats?.allReady
-                ? 'Alle Teilnehmer sind beigetreten und haben ihren Wunschzettel ausgefüllt. Der Organisator kann das Wichteln nun auslosen!'
-                : `Warte auf Teilnehmer: ${stats?.readyCount || 0} von ${stats?.totalCount || participants.length} bereit.`}
+                ? t('join.descAllReady')
+                : t('join.descWaiting', { ready: stats?.readyCount || 0, total: stats?.totalCount || participants.length })}
             </p>
           </div>
 
@@ -207,7 +209,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
               className={`badge ${stats.allReady ? 'badge-ready' : 'badge-pending'}`}
               style={{ padding: '6px 12px', fontSize: '0.82rem' }}
             >
-              {stats.readyCount} von {stats.totalCount} bereit
+              {t('join.readyBadge', { ready: stats.readyCount, total: stats.totalCount })}
             </span>
           )}
         </div>
@@ -236,10 +238,9 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
 
       {/* Name Selection Grid */}
       <div className="glass-card">
-        <h2 style={{ marginBottom: '8px' }}>Wähle deinen Namen aus der Liste</h2>
+        <h2 style={{ marginBottom: '8px' }}>{t('join.chooseNameTitle')}</h2>
         <p style={{ fontSize: '0.9rem', marginBottom: '20px' }}>
-          Der Organisator hat folgende Namen für die Runde festgelegt. Klicke auf deinen Namen, um beizutreten.
-          Jeder Name kann nur genau einmal gewählt werden!
+          {t('join.chooseNameDesc')}
         </p>
 
         <div className="name-picker-grid">
@@ -290,19 +291,19 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                     </strong>
                     {event.is_drawn ? (
                       <span style={{ fontSize: '0.75rem', color: '#34d399' }}>
-                        Ausgelost
+                        {t('join.badgeDrawn')}
                       </span>
                     ) : isReady ? (
                       <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                        <span>✓ Bereit für Auslosung</span>
+                        <span>{t('join.badgeReady')}</span>
                       </span>
                     ) : isClaimed ? (
                       <span style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                        <span>Beigetreten (Wunschzettel noch offen)</span>
+                        <span>{t('join.badgeJoinedPending')}</span>
                       </span>
                     ) : (
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        Noch frei zum Auswählen
+                        {t('join.badgeFree')}
                       </span>
                     )}
                   </div>
@@ -322,7 +323,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                       }
                     }}
                   >
-                    <span>{existingToken ? 'Zu meinem Wunschzettel' : 'Zugang öffnen'}</span>
+                    <span>{existingToken ? t('join.goToMyWishlist') : t('join.btnOpenAccess')}</span>
                     <ArrowRight size={13} />
                   </button>
                 ) : (
@@ -331,7 +332,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                     className="btn btn-secondary btn-sm"
                     style={{ marginTop: '4px', width: '100%' }}
                   >
-                    <span>Das bin ich</span>
+                    <span>{t('join.btnThatsMe')}</span>
                     <ArrowRight size={14} />
                   </button>
                 )}
@@ -345,9 +346,9 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
       {selectedParticipant && (
         <div className="modal-overlay" onClick={() => setSelectedParticipant(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '8px' }}>Bist du wirklich {selectedParticipant.name}?</h3>
+            <h3 style={{ marginBottom: '8px' }}>{t('join.confirmTitle', { name: selectedParticipant.name })}</h3>
             <p style={{ fontSize: '0.9rem', marginBottom: '20px' }}>
-              Sobald du diesen Namen wählst, ist er für andere gesperrt. Im nächsten Schritt kannst du deinen Wunschzettel ausfüllen – dieser kann auch nach der Auslosung jederzeit noch angepasst werden.
+              {t('join.confirmDesc')}
             </p>
 
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -357,7 +358,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                 onClick={() => setSelectedParticipant(null)}
                 disabled={claiming}
               >
-                Abbrechen
+                {t('common.cancel')}
               </button>
               <button
                 type="button"
@@ -365,7 +366,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
                 onClick={handleClaim}
                 disabled={claiming}
               >
-                <span>{claiming ? 'Beitreten...' : 'Ja, das bin ich!'}</span>
+                <span>{claiming ? t('join.confirmJoining') : t('join.confirmYes')}</span>
                 <ArrowRight size={16} />
               </button>
             </div>
@@ -377,9 +378,9 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
       {claimedInfoModal && (
         <div className="modal-overlay" onClick={() => setClaimedInfoModal(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
-            <h3 style={{ marginBottom: '8px' }}>{claimedInfoModal.name} ist bereits beigetreten</h3>
+            <h3 style={{ marginBottom: '8px' }}>{t('join.alreadyClaimedTitle', { name: claimedInfoModal.name })}</h3>
             <p style={{ fontSize: '0.9rem', marginBottom: '16px', color: 'var(--text-secondary)' }}>
-              Um deinen Wunschzettel zu bearbeiten oder dein Wichtelkind einzusehen, nutze bitte deinen persönlichen Zugangslink (aus deinen Browser-Lesezeichen, dem Verlauf oder deinem Chat).
+              {t('join.alreadyClaimedDesc')}
             </p>
             <div style={{
               background: 'rgba(10, 14, 23, 0.5)',
@@ -391,7 +392,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
               color: 'var(--text-muted)',
               textAlign: 'left'
             }}>
-              <strong>100% Geheim vor dem Admin:</strong> Aus Datenschutzgründen hat selbst der Organisator keinen Zugriff auf deinen persönlichen Zugangslink und kann zu keinem Zeitpunkt sehen, wen du beschenkst. (Falls du vor der Auslosung deinen Zugang verloren hast, kann der Admin deinen Beitritt freigeben, damit du deinen Namen neu auswählen kannst).
+              {t('join.alreadyClaimedPrivacy')}
             </div>
 
             <button
@@ -400,7 +401,7 @@ export default function JoinEvent({ eventId, onClaimed, onNavigateToPortal }) {
               style={{ width: '100%' }}
               onClick={() => setClaimedInfoModal(null)}
             >
-              Verstanden
+              {t('common.gotIt')}
             </button>
           </div>
         </div>
