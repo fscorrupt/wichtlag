@@ -1,12 +1,23 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Trash2, Upload, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Plus, Trash2, Upload, CheckCircle2, AlertTriangle, Lock, ArrowLeft } from 'lucide-react';
 import { BANNER_PRESETS, BUDGET_PRESETS } from '../constants/presets';
 import { matchSecretSanta } from '../../server/matcher.js';
 import { useTranslation } from '../i18n';
 
-export default function EventCreate({ onCreated }) {
+export default function EventCreate({
+  onCreated,
+  appConfig = { allowEventCreation: true, creationPasswordRequired: false, allowImageUploads: true },
+  configLoaded = true,
+  onNavigate
+}) {
   const { t, formatDate, getThemeName } = useTranslation();
   const [step, setStep] = useState(1);
+
+  // Creation password gate state
+  const [creationPassword, setCreationPassword] = useState('');
+  const [isCreationUnlocked, setIsCreationUnlocked] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [verifyingPassword, setVerifyingPassword] = useState(false);
 
   // Step 1: Eckdaten
   const [title, setTitle] = useState('');
@@ -101,6 +112,40 @@ export default function EventCreate({ onCreated }) {
     setExclusions(exclusions.filter((_, i) => i !== index));
   };
 
+  // Verify creation password
+  const handleUnlockCreation = async (e) => {
+    e.preventDefault();
+    if (!creationPassword || verifyingPassword) return;
+
+    setVerifyingPassword(true);
+    setAuthError('');
+
+    try {
+      const res = await fetch('/api/creation-auth', {
+        method: 'POST',
+        headers: {
+          'X-Creation-Password': creationPassword
+        }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 429 || data.code === 'TOO_MANY_ATTEMPTS') {
+          setAuthError(t('create.errorTooManyAttempts'));
+        } else if (data.code === 'INVALID_CREATION_PASSWORD' || res.status === 403) {
+          setAuthError(t('create.errorInvalidPassword'));
+        } else {
+          setAuthError(data.error || t('common.serverError'));
+        }
+        return;
+      }
+      setIsCreationUnlocked(true);
+    } catch {
+      setAuthError(t('common.serverError'));
+    } finally {
+      setVerifyingPassword(false);
+    }
+  };
+
   // Custom banner upload
   const handleBannerUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -114,9 +159,15 @@ export default function EventCreate({ onCreated }) {
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: creationPassword ? { 'X-Creation-Password': creationPassword } : undefined,
         body: formData
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 403 && data.code === 'INVALID_CREATION_PASSWORD') {
+        setIsCreationUnlocked(false);
+        setAuthError(t('create.errorInvalidPassword'));
+        return;
+      }
       if (res.ok && data.url) {
         setBannerUrl(data.url);
       } else {
@@ -125,6 +176,7 @@ export default function EventCreate({ onCreated }) {
     } catch {
       setError(t('common.serverError'));
     } finally {
+      e.target.value = '';
       setIsUploadingBanner(false);
     }
   };
@@ -175,7 +227,10 @@ export default function EventCreate({ onCreated }) {
     try {
       const res = await fetch('/api/events', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(creationPassword ? { 'X-Creation-Password': creationPassword } : {})
+        },
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
@@ -187,7 +242,12 @@ export default function EventCreate({ onCreated }) {
         })
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 403 && data.code === 'INVALID_CREATION_PASSWORD') {
+        setIsCreationUnlocked(false);
+        setAuthError(t('create.errorInvalidPassword'));
+        return;
+      }
       if (!res.ok) {
         throw new Error(data.error || t('create.errorUpload'));
       }
@@ -199,6 +259,99 @@ export default function EventCreate({ onCreated }) {
       setLoading(false);
     }
   };
+
+  if (!configLoaded) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+        <p>{t('common.loading')}</p>
+      </div>
+    );
+  }
+
+  if (!appConfig.allowEventCreation) {
+    return (
+      <div className="glass-card" style={{ maxWidth: '520px', margin: '0 auto', textAlign: 'center', padding: '40px 24px' }}>
+        <Lock size={44} color="#f59e0b" style={{ margin: '0 auto 16px auto' }} />
+        <h1 style={{ fontSize: '1.5rem', marginBottom: '10px' }}>{t('create.disabledTitle')}</h1>
+        <p style={{ marginBottom: '24px', color: 'var(--text-secondary)' }}>{t('create.disabledDesc')}</p>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => (onNavigate ? onNavigate('/') : (window.location.href = '/'))}
+        >
+          <ArrowLeft size={16} />
+          <span>{t('common.home')}</span>
+        </button>
+      </div>
+    );
+  }
+
+  if (appConfig.creationPasswordRequired && !isCreationUnlocked) {
+    return (
+      <div className="glass-card" style={{ maxWidth: '480px', margin: '0 auto', padding: '32px 24px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <Lock size={40} color="#f59e0b" style={{ margin: '0 auto 12px auto' }} />
+          <h1 style={{ fontSize: '1.45rem', marginBottom: '8px' }}>{t('create.passwordRequiredTitle')}</h1>
+          <p style={{ margin: 0, fontSize: '0.92rem', color: 'var(--text-secondary)' }}>
+            {t('create.passwordRequiredDesc')}
+          </p>
+        </div>
+
+        {authError && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            borderRadius: 'var(--radius-md)',
+            padding: '10px 14px',
+            color: '#fca5a5',
+            marginBottom: '16px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            fontSize: '0.88rem'
+          }}>
+            <AlertTriangle size={16} color="#ef4444" style={{ flexShrink: 0 }} />
+            <span>{authError}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleUnlockCreation}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="creation-password-input">{t('create.passwordLabel')}</label>
+            <input
+              id="creation-password-input"
+              type="password"
+              className="form-input"
+              placeholder={t('create.passwordPlaceholder')}
+              value={creationPassword}
+              onChange={(e) => setCreationPassword(e.target.value)}
+              autoFocus
+              required
+            />
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className="btn btn-outline"
+              onClick={() => (onNavigate ? onNavigate('/') : (window.location.href = '/'))}
+              disabled={verifyingPassword}
+            >
+              <ArrowLeft size={16} />
+              <span>{t('common.home')}</span>
+            </button>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={verifyingPassword || !creationPassword}
+            >
+              <span>{verifyingPassword ? t('create.verifyingBtn') : t('create.unlockBtn')}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    );
+  }
 
   const selectedPreset = BANNER_PRESETS.find((p) => p.id === bannerUrl);
   const stepLabels = t('create.steps') || ['Eure Runde', 'Euer Look', 'Eure Menschen'];
@@ -377,22 +530,26 @@ export default function EventCreate({ onCreated }) {
             })}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-            <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-              <Upload size={14} />
-              <span>{isUploadingBanner ? t('common.uploading') : t('common.uploadCustomImage')}</span>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={handleBannerUpload}
-                disabled={isUploadingBanner}
-              />
-            </label>
-            {bannerUrl.startsWith('/uploads/') && (
-              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ {t('common.customImageActive')}</span>
-            )}
-          </div>
+          {(appConfig.allowImageUploads || bannerUrl.startsWith('/uploads/')) && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+              {appConfig.allowImageUploads && (
+                <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                  <Upload size={14} />
+                  <span>{isUploadingBanner ? t('common.uploading') : t('common.uploadCustomImage')}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleBannerUpload}
+                    disabled={isUploadingBanner}
+                  />
+                </label>
+              )}
+              {bannerUrl.startsWith('/uploads/') && (
+                <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ {t('common.customImageActive')}</span>
+              )}
+            </div>
+          )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
             <button

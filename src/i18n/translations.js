@@ -70,6 +70,7 @@ export const translations = {
       titleSub: 'Verschenk ein\nbisschen Freude.',
       description: 'Für deine Lieblingsmenschen. Fürs Team. Für die Familie. Organisiere eure Wichtelrunde ganz entspannt, ohne Konto und ohne E-Mail.',
       createBtn: 'Neue Aktion erstellen',
+      joinWithCodeBtn: 'Mit Einladungs-Code beitreten',
       assuranceNoAccount: 'Ohne Registrierung',
       assuranceSecret: 'Paarungen bleiben geheim',
       surpriseGiftAria: 'Kleine Überraschung auspacken',
@@ -152,7 +153,17 @@ export const translations = {
       errorTwoPersonsRequired: 'Wähle zwei unterschiedliche Personen für den Ausschluss aus.',
       errorUpload: 'Fehler beim Hochladen.',
       errorTitleAndDateRequired: 'Titel und Datum sind erforderlich.',
-      errorMinTwoParticipants: 'Es werden mindestens zwei Teilnehmer benötigt.'
+      errorMinTwoParticipants: 'Es werden mindestens zwei Teilnehmer benötigt.',
+      disabledTitle: 'Aktionserstellung deaktiviert',
+      disabledDesc: 'Der Administrator dieser Instanz hat das Erstellen neuer Wichtel-Aktionen deaktiviert. Du kannst weiterhin über einen Einladungs- oder persönlichen Zugangslink teilnehmen.',
+      passwordRequiredTitle: 'Passwort erforderlich',
+      passwordRequiredDesc: 'Um auf dieser Instanz eine neue Wichtel-Aktion anzulegen, gib bitte das vom Administrator festgelegte Passwort ein.',
+      passwordLabel: 'Passwort zur Aktionserstellung',
+      passwordPlaceholder: 'Passwort eingeben...',
+      unlockBtn: 'Freischalten',
+      verifyingBtn: 'Prüfe...',
+      errorInvalidPassword: 'Das eingegebene Passwort ist nicht korrekt.',
+      errorTooManyAttempts: 'Zu viele fehlgeschlagene Versuche. Bitte warte einen Moment.'
     },
 
     // Join Event View
@@ -458,6 +469,7 @@ export const translations = {
       titleSub: 'Share a little\nbit of joy.',
       description: 'For your favorite people. For the team. For the family. Organize your Secret Santa round effortlessly, without accounts or emails.',
       createBtn: 'Create new event',
+      joinWithCodeBtn: 'Join with invite code',
       assuranceNoAccount: 'No registration needed',
       assuranceSecret: 'Pairings remain secret',
       surpriseGiftAria: 'Unwrap a small surprise',
@@ -540,7 +552,17 @@ export const translations = {
       errorTwoPersonsRequired: 'Select two different people for the exclusion.',
       errorUpload: 'Error uploading image.',
       errorTitleAndDateRequired: 'Title and date are required.',
-      errorMinTwoParticipants: 'At least two participants are required.'
+      errorMinTwoParticipants: 'At least two participants are required.',
+      disabledTitle: 'Event creation disabled',
+      disabledDesc: 'The administrator of this instance has disabled creating new Secret Santa events. You can still join via an invitation or personal access link.',
+      passwordRequiredTitle: 'Password required',
+      passwordRequiredDesc: 'Please enter the administrator password to create a new Secret Santa event on this instance.',
+      passwordLabel: 'Event creation password',
+      passwordPlaceholder: 'Enter password...',
+      unlockBtn: 'Unlock',
+      verifyingBtn: 'Checking...',
+      errorInvalidPassword: 'The password you entered is incorrect.',
+      errorTooManyAttempts: 'Too many failed attempts. Please wait a moment.'
     },
 
     // Join Event View

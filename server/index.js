@@ -8,12 +8,155 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { db, DATA_DIR, UPLOADS_DIR } from './db.js';
 import { matchSecretSanta, validateDrawPossibility } from './matcher.js';
-import { startCleanupSchedule } from './cleanup.js';
+import { startCleanupSchedule, deleteEventUploads } from './cleanup.js';
 
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function parseBooleanEnv(value, defaultValue = true) {
+  if (value === undefined || value === null || value === '') return defaultValue;
+  const normalized = String(value).trim().toLowerCase();
+  if (['false', '0', 'no', 'off'].includes(normalized)) return false;
+  if (['true', '1', 'yes', 'on'].includes(normalized)) return true;
+  return defaultValue;
+}
+
+const ALLOW_EVENT_CREATION = parseBooleanEnv(process.env.ALLOW_EVENT_CREATION, true);
+const CREATION_PASSWORD = process.env.CREATION_PASSWORD || '';
+const ALLOW_IMAGE_UPLOADS = parseBooleanEnv(process.env.ALLOW_IMAGE_UPLOADS, true);
+
+const ALLOWED_IMAGE_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const CREATION_AUTH_WINDOW_MS = 15 * 60 * 1000;
+const CREATION_AUTH_MAX_FAILURES = 10;
+const creationAuthFailures = new Map();
+
+function isValidCreationPassword(provided) {
+  if (!CREATION_PASSWORD) return true;
+  if (typeof provided !== 'string' || !provided) return false;
+  // Compare SHA-256 digests so timingSafeEqual works on equal-length buffers without leaking password length
+  const expectedHash = crypto.createHash('sha256').update(CREATION_PASSWORD, 'utf8').digest();
+  const providedHash = crypto.createHash('sha256').update(provided, 'utf8').digest();
+  return crypto.timingSafeEqual(expectedHash, providedHash);
+}
+
+function getCreationAuthClientKey(req) {
+  return req.ip || req.socket?.remoteAddress || 'unknown';
+}
+
+function pruneExpiredAuthFailures(now) {
+  for (const [key, entry] of creationAuthFailures.entries()) {
+    if (now - entry.windowStart >= CREATION_AUTH_WINDOW_MS) {
+      creationAuthFailures.delete(key);
+    }
+  }
+}
+
+function checkCreationAuthRateLimit(req) {
+  const now = Date.now();
+  pruneExpiredAuthFailures(now);
+  const entry = creationAuthFailures.get(getCreationAuthClientKey(req));
+  return Boolean(entry && entry.count >= CREATION_AUTH_MAX_FAILURES);
+}
+
+function recordCreationAuthFailure(req) {
+  const now = Date.now();
+  const key = getCreationAuthClientKey(req);
+  const existing = creationAuthFailures.get(key);
+  if (!existing || now - existing.windowStart >= CREATION_AUTH_WINDOW_MS) {
+    creationAuthFailures.set(key, { count: 1, windowStart: now });
+  } else {
+    existing.count += 1;
+  }
+}
+
+function clearCreationAuthFailures(req) {
+  creationAuthFailures.delete(getCreationAuthClientKey(req));
+}
+
+function requireCreationAccess(req, res, next) {
+  if (!ALLOW_EVENT_CREATION) {
+    return res.status(403).json({
+      error: 'Das Erstellen neuer Aktionen wurde vom Administrator deaktiviert.',
+      code: 'EVENT_CREATION_DISABLED'
+    });
+  }
+
+  if (CREATION_PASSWORD) {
+    if (checkCreationAuthRateLimit(req)) {
+      return res.status(429).json({
+        error: 'Zu viele fehlgeschlagene Versuche. Bitte warte einen Moment.',
+        code: 'TOO_MANY_ATTEMPTS'
+      });
+    }
+    const headerPassword = typeof req.headers['x-creation-password'] === 'string'
+      ? req.headers['x-creation-password']
+      : undefined;
+    const supplied = headerPassword ?? req.body?.creation_password ?? '';
+    if (!isValidCreationPassword(supplied)) {
+      recordCreationAuthFailure(req);
+      return res.status(403).json({
+        error: 'Ungültiges Passwort für die Aktionserstellung.',
+        code: 'INVALID_CREATION_PASSWORD'
+      });
+    }
+    clearCreationAuthFailures(req);
+  }
+
+  next();
+}
+
+function requireUploadAccess(req, res, next) {
+  if (!ALLOW_IMAGE_UPLOADS) {
+    return res.status(403).json({
+      error: 'Der Bildupload wurde vom Administrator deaktiviert.',
+      code: 'IMAGE_UPLOADS_DISABLED'
+    });
+  }
+
+  const eventId = typeof req.headers['x-event-id'] === 'string'
+    ? req.headers['x-event-id']
+    : typeof req.query.eventId === 'string'
+    ? req.query.eventId
+    : '';
+  const adminToken = typeof req.headers['x-admin-token'] === 'string' ? req.headers['x-admin-token'] : '';
+  const participantToken = typeof req.headers['x-participant-token'] === 'string' ? req.headers['x-participant-token'] : '';
+
+  if (adminToken) {
+    const validAdmin = eventId && db.prepare(`SELECT id FROM events WHERE id = ? AND admin_token = ?`).get(eventId, adminToken);
+    if (!validAdmin) {
+      return res.status(403).json({ error: 'Ungültiges Admin-Token.', code: 'UPLOAD_UNAUTHORIZED' });
+    }
+    return next();
+  }
+
+  if (participantToken) {
+    const validParticipant = eventId && db.prepare(`SELECT id FROM participants WHERE event_id = ? AND participant_token = ?`).get(eventId, participantToken);
+    if (!validParticipant) {
+      return res.status(403).json({ error: 'Ungültiger Teilnehmer-Zugang.', code: 'UPLOAD_UNAUTHORIZED' });
+    }
+    return next();
+  }
+
+  return requireCreationAccess(req, res, next);
+}
+
+function detectImageExtension(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) return null;
+  if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return '.jpg';
+  if (
+    buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47 &&
+    buffer[4] === 0x0d && buffer[5] === 0x0a && buffer[6] === 0x1a && buffer[7] === 0x0a
+  ) return '.png';
+  const header6 = buffer.subarray(0, 6).toString('ascii');
+  if (header6 === 'GIF87a' || header6 === 'GIF89a') return '.gif';
+  if (
+    buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+  ) return '.webp';
+  return null;
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,26 +165,20 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Serve uploaded files
-app.use('/uploads', express.static(UPLOADS_DIR));
-
-// Setup multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOADS_DIR);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.png';
-    const uniqueName = `${Date.now()}_${crypto.randomBytes(6).toString('hex')}${ext}`;
-    cb(null, uniqueName);
+// Serve uploaded files with strict anti-sniffing and script-blocking headers
+app.use('/uploads', express.static(UPLOADS_DIR, {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
   }
-});
+}));
 
+// Setup multer in memory so magic bytes are verified before writing to disk
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
+    if (ALLOWED_IMAGE_MIMES.has(file.mimetype)) {
       cb(null, true);
     } else {
       cb(new Error('Nur Bilddateien (JPG, PNG, WebP, GIF) sind erlaubt.'));
@@ -54,25 +191,77 @@ function generateId(bytes = 6) {
   return crypto.randomBytes(bytes).toString('hex');
 }
 
+function getEventStats(eventId) {
+  const statsRow = db.prepare(`
+    SELECT COUNT(*) AS totalCount,
+           SUM(CASE WHEN is_claimed = 1 THEN 1 ELSE 0 END) AS claimedCount,
+           SUM(CASE WHEN is_ready = 1 THEN 1 ELSE 0 END) AS readyCount
+    FROM participants
+    WHERE event_id = ?
+  `).get(eventId);
+
+  const totalCount = statsRow?.totalCount || 0;
+  const claimedCount = statsRow?.claimedCount || 0;
+  const readyCount = statsRow?.readyCount || 0;
+  const allReady = totalCount > 0 && readyCount === totalCount;
+  return { totalCount, claimedCount, readyCount, allReady };
+}
+
 // ----------------------------------------------------
 // API ROUTES
 // ----------------------------------------------------
 
 /**
+ * Public runtime configuration flags (never expose secrets)
+ */
+app.get('/api/config', (req, res) => {
+  res.json({
+    allowEventCreation: ALLOW_EVENT_CREATION,
+    creationPasswordRequired: ALLOW_EVENT_CREATION && Boolean(CREATION_PASSWORD),
+    allowImageUploads: ALLOW_IMAGE_UPLOADS
+  });
+});
+
+/**
+ * Verify creation password before starting the event wizard
+ */
+app.post('/api/creation-auth', requireCreationAccess, (req, res) => {
+  res.json({ authorized: true });
+});
+
+/**
  * Upload an image (banner or avatar)
  */
-app.post('/api/upload', upload.single('image'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'Keine Datei hochgeladen.' });
-  }
-  const fileUrl = `/uploads/${req.file.filename}`;
-  res.json({ url: fileUrl });
+app.post('/api/upload', requireUploadAccess, (req, res) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE'
+        ? 'Datei ist zu groß (maximal 5 MB erlaubt).'
+        : err.message || 'Fehler beim Hochladen der Datei.';
+      return res.status(400).json({ error: message });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'Keine Datei hochgeladen.' });
+    }
+    const ext = detectImageExtension(req.file.buffer);
+    if (!ext) {
+      return res.status(400).json({ error: 'Nur Bilddateien (JPG, PNG, WebP, GIF) sind erlaubt.' });
+    }
+    const uniqueName = `${Date.now()}_${crypto.randomBytes(6).toString('hex')}${ext}`;
+    fs.writeFile(path.join(UPLOADS_DIR, uniqueName), req.file.buffer, (writeErr) => {
+      if (writeErr) {
+        console.error('Fehler beim Speichern des Uploads:', writeErr);
+        return res.status(500).json({ error: 'Fehler beim Speichern der Datei.' });
+      }
+      res.json({ url: `/uploads/${uniqueName}` });
+    });
+  });
 });
 
 /**
  * Create a new Secret Santa event
  */
-app.post('/api/events', (req, res) => {
+app.post('/api/events', requireCreationAccess, (req, res) => {
   try {
     const { title, description, event_date, max_budget, banner_url, names, exclusions } = req.body;
 
@@ -308,18 +497,7 @@ app.get('/api/events/:id/me', (req, res) => {
     }
 
     // Stats for the round
-    const statsRow = db.prepare(`
-      SELECT COUNT(*) AS totalCount,
-             SUM(CASE WHEN is_claimed = 1 THEN 1 ELSE 0 END) AS claimedCount,
-             SUM(CASE WHEN is_ready = 1 THEN 1 ELSE 0 END) AS readyCount
-      FROM participants
-      WHERE event_id = ?
-    `).get(eventId);
-
-    const totalCount = statsRow?.totalCount || 0;
-    const claimedCount = statsRow?.claimedCount || 0;
-    const readyCount = statsRow?.readyCount || 0;
-    const allReady = totalCount > 0 && readyCount === totalCount;
+    const stats = getEventStats(eventId);
 
     res.json({
       event: {
@@ -340,12 +518,7 @@ app.get('/api/events/:id/me', (req, res) => {
         wishlist_updated_at: participant.wishlist_updated_at,
         is_ready: participant.is_ready === 1
       },
-      stats: {
-        totalCount,
-        claimedCount,
-        readyCount,
-        allReady
-      },
+      stats,
       target
     });
   } catch (err) {
@@ -399,7 +572,8 @@ app.put('/api/events/:id/me', (req, res) => {
       participant.id
     );
 
-    res.json({ success: true, is_ready: finalReady === 1 });
+    const stats = getEventStats(eventId);
+    res.json({ success: true, is_ready: finalReady === 1, stats });
   } catch (err) {
     console.error('Fehler beim Aktualisieren des Wunschzettels:', err);
     res.status(500).json({ error: 'Fehler beim Speichern.' });
@@ -860,6 +1034,7 @@ app.delete('/api/events/:id', (req, res) => {
       return res.status(403).json({ error: 'Ungültiges Admin-Token.' });
     }
 
+    deleteEventUploads(eventId);
     db.prepare(`DELETE FROM events WHERE id = ?`).run(eventId);
     res.json({ success: true, message: 'Aktion wurde erfolgreich gelöscht.' });
   } catch (err) {
@@ -904,4 +1079,7 @@ process.on('SIGINT', () => handleExit('SIGINT'));
 app.listen(PORT, () => {
   console.log(`[WichtlAG] Server läuft auf Port ${PORT}`);
   console.log(`[WichtlAG] Datenverzeichnis: ${DATA_DIR}`);
+  console.log(
+    `[WichtlAG] Konfiguration: Aktionserstellung=${ALLOW_EVENT_CREATION ? (CREATION_PASSWORD ? 'passwortgeschützt' : 'aktiv') : 'deaktiviert'}, Bildupload=${ALLOW_IMAGE_UPLOADS ? 'aktiv' : 'deaktiviert'}`
+  );
 });

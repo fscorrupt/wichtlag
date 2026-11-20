@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Calendar, Euro, CheckCircle2, AlertCircle, Copy, Check, ExternalLink,
   Sparkles, Heart, Gift, Upload, Save, User, Lock, ArrowLeft, Bookmark
@@ -7,12 +7,13 @@ import { BANNER_PRESETS, AVATAR_PRESETS } from '../constants/presets';
 import confetti from 'canvas-confetti';
 import { useTranslation } from '../i18n';
 
-export default function ParticipantPortal({ eventId, token, onNavigate }) {
+export default function ParticipantPortal({ eventId, token, onNavigate, allowImageUploads = true }) {
   const { t, formatDate, getAvatarLabel } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [saveError, setSaveError] = useState('');
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
@@ -25,37 +26,66 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
 
   // Secret reveal state
   const [isRevealed, setIsRevealed] = useState(() => {
-    return localStorage.getItem(`revealed_${eventId}_${token}`) === 'true';
+    try {
+      return localStorage.getItem(`revealed_${eventId}_${token}`) === 'true';
+    } catch {
+      return false;
+    }
   });
 
-  const fetchPortalData = async () => {
-    try {
-      const res = await fetch(`/api/events/${eventId}/me?token=${token}`);
-      if (!res.ok) {
-        const errJson = await res.json();
-        throw new Error(errJson.error || t('portal.invalidAccessTitle'));
-      }
-      const json = await res.json();
-      setData(json);
-
-      // Populate form
-      setAvatarUrl(json.participant.avatar_url || 'avatar:santa');
-      setWishlistText(json.participant.wishlist_text || '');
-      setWishlistUrl(json.participant.wishlist_url || '');
-      setIsReady(json.participant.is_ready);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Keep latest localized fallback outside the polling effect so language switches don't reset drafts
+  const invalidAccessFallbackRef = useRef(t('portal.invalidAccessTitle'));
+  invalidAccessFallbackRef.current = t('portal.invalidAccessTitle');
 
   useEffect(() => {
-    if (eventId && token) {
-      fetchPortalData();
-      const interval = setInterval(fetchPortalData, 8000);
-      return () => clearInterval(interval);
+    if (!eventId || !token) {
+      setError(invalidAccessFallbackRef.current);
+      setLoading(false);
+      return;
     }
+
+    const controller = new AbortController();
+    const { signal } = controller;
+    let formInitialized = false;
+    let refreshTimer;
+
+    const refresh = async () => {
+      try {
+        const res = await fetch(`/api/events/${eventId}/me?token=${token}`, { signal });
+        const json = await res.json().catch(() => ({}));
+        if (signal.aborted) return;
+        if (!res.ok) {
+          throw new Error(json.error || invalidAccessFallbackRef.current);
+        }
+
+        setData(json);
+        setError('');
+        // The form is a local draft. Background refreshes update only the server data.
+        if (!formInitialized) {
+          const { participant } = json;
+          setAvatarUrl(participant.avatar_url || 'avatar:santa');
+          setWishlistText(participant.wishlist_text || '');
+          setWishlistUrl(participant.wishlist_url || '');
+          setIsReady(participant.is_ready);
+          formInitialized = true;
+        }
+      } catch (err) {
+        if (!signal.aborted && !formInitialized) {
+          setError(err.message);
+        }
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false);
+          refreshTimer = setTimeout(refresh, 8000);
+        }
+      }
+    };
+
+    refresh();
+    return () => {
+      controller.abort();
+      clearTimeout(refreshTimer);
+    };
   }, [eventId, token]);
 
   // Handle saving profile & wishlist
@@ -63,7 +93,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
     e?.preventDefault();
     setSaving(true);
     setSaveSuccess(false);
-    setError('');
+    setSaveError('');
 
     try {
       const isEventDrawn = Boolean(data?.event?.is_drawn);
@@ -78,10 +108,13 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
         })
       });
 
+      const resJson = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error(t('common.serverError'));
+        throw new Error(resJson.error || t('common.serverError'));
       }
 
+      const persistedReady = resJson.is_ready !== undefined ? Boolean(resJson.is_ready) : (isEventDrawn ? true : isReady);
+      setIsReady(persistedReady);
       setData((prev) => prev ? ({
         ...prev,
         participant: {
@@ -89,14 +122,15 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           avatar_url: avatarUrl,
           wishlist_text: wishlistText,
           wishlist_url: wishlistUrl,
-          is_ready: isEventDrawn ? true : isReady
-        }
+          is_ready: persistedReady
+        },
+        stats: resJson.stats || prev.stats
       }) : prev);
 
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3500);
     } catch (err) {
-      setError(err.message);
+      setSaveError(err.message);
     } finally {
       setSaving(false);
     }
@@ -114,9 +148,13 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: {
+          'X-Event-Id': eventId,
+          'X-Participant-Token': token
+        },
         body: formData
       });
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       if (res.ok && resData.url) {
         setAvatarUrl(resData.url);
       } else {
@@ -125,6 +163,7 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
     } catch {
       alert(t('portal.uploadFailed') || t('common.uploadFailed'));
     } finally {
+      e.target.value = '';
       setIsUploadingAvatar(false);
     }
   };
@@ -132,7 +171,9 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
   // Trigger reveal animation
   const handleReveal = () => {
     setIsRevealed(true);
-    localStorage.setItem(`revealed_${eventId}_${token}`, 'true');
+    try {
+      localStorage.setItem(`revealed_${eventId}_${token}`, 'true');
+    } catch {}
     confetti({
       particleCount: 120,
       spread: 90,
@@ -508,6 +549,23 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
           {t('portal.wishlistNotice')}
         </div>
 
+        {saveError && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.4)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 16px',
+            color: '#fca5a5',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <AlertCircle size={18} color="#ef4444" style={{ flexShrink: 0 }} />
+            <span>{saveError}</span>
+          </div>
+        )}
+
         {saveSuccess && (
           <div style={{
             background: 'rgba(16, 185, 129, 0.2)',
@@ -551,22 +609,26 @@ export default function ParticipantPortal({ eventId, token, onNavigate }) {
             })}
           </div>
 
-          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-              <Upload size={14} />
-              <span>{isUploadingAvatar ? t('common.uploading') : t('common.uploadCustomPhoto')}</span>
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: 'none' }}
-                onChange={handleAvatarUpload}
-                disabled={isUploadingAvatar}
-              />
-            </label>
-            {avatarUrl.startsWith('/uploads/') && (
-              <span style={{ fontSize: '0.8rem', color: '#34d399' }}>{t('common.customImageActive')}</span>
-            )}
-          </div>
+          {(allowImageUploads || avatarUrl.startsWith('/uploads/')) && (
+            <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {allowImageUploads && (
+                <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                  <Upload size={14} />
+                  <span>{isUploadingAvatar ? t('common.uploading') : t('common.uploadCustomPhoto')}</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleAvatarUpload}
+                    disabled={isUploadingAvatar}
+                  />
+                </label>
+              )}
+              {avatarUrl.startsWith('/uploads/') && (
+                <span style={{ fontSize: '0.8rem', color: '#34d399' }}>{t('common.customImageActive')}</span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Wishlist Textarea */}

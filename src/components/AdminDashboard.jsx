@@ -9,7 +9,7 @@ import QRCodeModal from './QRCodeModal';
 import confetti from 'canvas-confetti';
 import { useTranslation } from '../i18n';
 
-export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
+export default function AdminDashboard({ eventId, adminToken, onNavigate, allowImageUploads = true }) {
   const { t, formatDate, getThemeName } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -84,7 +84,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
 
   // Handle Banner Upload in Edit Modal
   const handleBannerUpload = async (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
@@ -94,9 +94,13 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
     try {
       const res = await fetch('/api/upload', {
         method: 'POST',
+        headers: {
+          'X-Event-Id': eventId,
+          'X-Admin-Token': adminToken
+        },
         body: formData
       });
-      const resData = await res.json();
+      const resData = await res.json().catch(() => ({}));
       if (!res.ok) {
         throw new Error(resData.error || t('create.errorUpload'));
       }
@@ -104,6 +108,7 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
     } catch (err) {
       alert(err.message);
     } finally {
+      e.target.value = '';
       setIsUploadingBanner(false);
     }
   };
@@ -958,22 +963,26 @@ export default function AdminDashboard({ eventId, adminToken, onNavigate }) {
                   })}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                    <Upload size={14} />
-                    <span>{isUploadingBanner ? t('common.uploading') : t('common.uploadCustomImage')}</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      style={{ display: 'none' }}
-                      onChange={handleBannerUpload}
-                      disabled={isUploadingBanner}
-                    />
-                  </label>
-                  {editBannerUrl.startsWith('/uploads/') && (
-                    <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ {t('common.customImageActive')}</span>
-                  )}
-                </div>
+                {(allowImageUploads || editBannerUrl.startsWith('/uploads/')) && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                    {allowImageUploads && (
+                      <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                        <Upload size={14} />
+                        <span>{isUploadingBanner ? t('common.uploading') : t('common.uploadCustomImage')}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          style={{ display: 'none' }}
+                          onChange={handleBannerUpload}
+                          disabled={isUploadingBanner}
+                        />
+                      </label>
+                    )}
+                    {editBannerUrl.startsWith('/uploads/') && (
+                      <span style={{ fontSize: '0.8rem', color: '#34d399' }}>✓ {t('common.customImageActive')}</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px', flexWrap: 'wrap' }}>

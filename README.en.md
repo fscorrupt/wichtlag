@@ -168,6 +168,9 @@ The application is accessible by default at **http://localhost:3001**. Express s
 |---|---|---|
 | `PORT` | `3001` locally, `3000` in Docker | Express server port |
 | `DATA_DIR` | `./data` locally, `/app/data` in Docker | Directory for SQLite database and uploaded files |
+| `ALLOW_EVENT_CREATION` | `true` | Allows (`true`) or disables (`false`) creating new Secret Santa events for visitors |
+| `CREATION_PASSWORD` | _(empty)_ | Optional password required to create new events (only active when `ALLOW_EVENT_CREATION=true`) |
+| `ALLOW_IMAGE_UPLOADS` | `true` | Allows (`true`) or disables (`false`) uploading custom banners and profile photos (built-in presets remain available) |
 
 New installations use `wichtlag.sqlite`. An existing `wichtelmat.sqlite` will continue to be used if no `wichtlag.sqlite` exists yet. Uploads reside in the `uploads` subdirectory.
 
@@ -175,6 +178,7 @@ New installations use `wichtlag.sqlite`. An existing `wichtelmat.sqlite` will co
 
 - The API never transmits pairings to the admin area and never transmits personal links to the organizer.
 - Access links contain secret cryptographic tokens. Use HTTPS for public deployments and treat links like passwords.
+- For public instances, event creation can be disabled via `ALLOW_EVENT_CREATION=false` or protected with `CREATION_PASSWORD`. Image uploads validate file magic bytes (JPG, PNG, WebP, GIF), require authorization, and can be disabled completely with `ALLOW_IMAGE_UPLOADS=false`.
 - Data stays on your own server. Anyone with direct server or database access can inspect stored data; admin UI secrecy does not replace server-side encryption against operators.
 - The Docker image runs as unprivileged user `node`. The included Compose config specifies `no-new-privileges`.
 - Database queries use prepared statements; SQLite operates in WAL mode.

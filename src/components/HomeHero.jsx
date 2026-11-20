@@ -4,7 +4,7 @@ import confetti from 'canvas-confetti';
 import { BANNER_PRESETS } from '../constants/presets';
 import { useTranslation } from '../i18n';
 
-export default function HomeHero({ onCreateClick, onNavigate }) {
+export default function HomeHero({ onCreateClick, onNavigate, allowEventCreation = true }) {
   const { t, getThemeName } = useTranslation();
   const [accessCode, setAccessCode] = useState('');
   const [activeTheme, setActiveTheme] = useState(0);
@@ -60,9 +60,15 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
             </span>
           </h1>
           <p>{t('home.description')}</p>
-          <button type="button" className="btn btn-primary btn-lg" onClick={onCreateClick}>
-            {t('home.createBtn')} <ArrowRight size={19} />
-          </button>
+          {allowEventCreation ? (
+            <button type="button" className="btn btn-primary btn-lg" onClick={onCreateClick}>
+              {t('home.createBtn')} <ArrowRight size={19} />
+            </button>
+          ) : (
+            <a href="#join-title" className="btn btn-primary btn-lg">
+              {t('home.joinWithCodeBtn')} <ArrowDown size={19} />
+            </a>
+          )}
           <div className="hero-assurances">
             <span><Check size={15} /> {t('home.assuranceNoAccount')}</span>
             <span><ShieldCheck size={15} /> {t('home.assuranceSecret')}</span>
@@ -139,9 +145,11 @@ export default function HomeHero({ onCreateClick, onNavigate }) {
         <div className="theme-selection">
           <Sparkles size={16} />
           <span>{t('home.themeFitNote', { name: currentThemeName })}</span>
-          <button type="button" className="text-link" onClick={onCreateClick}>
-            {t('home.letsGoLink')} <ArrowRight size={16} />
-          </button>
+          {allowEventCreation && (
+            <button type="button" className="text-link" onClick={onCreateClick}>
+              {t('home.letsGoLink')} <ArrowRight size={16} />
+            </button>
+          )}
         </div>
       </section>
 

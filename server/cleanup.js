@@ -2,6 +2,33 @@ import { db, UPLOADS_DIR } from './db.js';
 import fs from 'fs';
 import path from 'path';
 
+function unlinkUploadIfExists(uploadUrl) {
+  if (!uploadUrl || !uploadUrl.startsWith('/uploads/')) return;
+  const filePath = path.join(UPLOADS_DIR, path.basename(uploadUrl));
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+}
+
+/**
+ * Remove all uploaded banner and avatar files associated with an event.
+ */
+export function deleteEventUploads(eventId) {
+  try {
+    const evt = db.prepare(`SELECT banner_url FROM events WHERE id = ?`).get(eventId);
+    if (evt) {
+      unlinkUploadIfExists(evt.banner_url);
+    }
+
+    const participants = db.prepare(`SELECT avatar_url FROM participants WHERE event_id = ?`).all(eventId);
+    for (const p of participants) {
+      unlinkUploadIfExists(p.avatar_url);
+    }
+  } catch (fileErr) {
+    console.error(`[Auto-Cleanup] Fehler beim Löschen von Dateien für Event ${eventId}:`, fileErr.message);
+  }
+}
+
 /**
  * Automatically delete events that ended more than 14 days ago.
  * Requirement: "2 wochen nach aktionsende, aktion löschen."
@@ -14,7 +41,7 @@ export function purgeExpiredEvents() {
 
     // Query events where event_date < cutoffDateStr
     const expiredEvents = db.prepare(`
-      SELECT id, title, event_date, banner_url FROM events
+      SELECT id, title, event_date FROM events
       WHERE event_date < ?
     `).all(cutoffDateStr);
 
@@ -28,27 +55,7 @@ export function purgeExpiredEvents() {
 
     for (const evt of expiredEvents) {
       // Clean up uploaded files for this event if applicable
-      try {
-        if (evt.banner_url && evt.banner_url.startsWith('/uploads/')) {
-          const filePath = path.join(UPLOADS_DIR, path.basename(evt.banner_url));
-          if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-          }
-        }
-
-        // Also clean up any uploaded participant avatars for this event
-        const participants = db.prepare(`SELECT avatar_url FROM participants WHERE event_id = ?`).all(evt.id);
-        for (const p of participants) {
-          if (p.avatar_url && p.avatar_url.startsWith('/uploads/')) {
-            const pPath = path.join(UPLOADS_DIR, path.basename(p.avatar_url));
-            if (fs.existsSync(pPath)) {
-              fs.unlinkSync(pPath);
-            }
-          }
-        }
-      } catch (fileErr) {
-        console.error(`[Auto-Cleanup] Fehler beim Löschen von Dateien für Event ${evt.id}:`, fileErr.message);
-      }
+      deleteEventUploads(evt.id);
 
       // Delete from DB (cascades to participants & exclusions)
       deleteStmt.run(evt.id);

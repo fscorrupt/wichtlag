@@ -16,6 +16,34 @@ export default function App() {
     try { return localStorage.getItem('wichtlag_appearance') === 'light' ? 'light' : 'dark'; }
     catch { return 'dark'; }
   });
+  const [appConfig, setAppConfig] = useState({
+    allowEventCreation: true,
+    creationPasswordRequired: false,
+    allowImageUploads: true
+  });
+  const [configLoaded, setConfigLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((cfg) => {
+        if (active && cfg && typeof cfg === 'object') {
+          setAppConfig({
+            allowEventCreation: cfg.allowEventCreation !== false,
+            creationPasswordRequired: Boolean(cfg.creationPasswordRequired),
+            allowImageUploads: cfg.allowImageUploads !== false
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setConfigLoaded(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.appearance = appearance;
@@ -46,6 +74,9 @@ export default function App() {
     if (currentPath === '/create') {
       return (
         <EventCreate
+          appConfig={appConfig}
+          configLoaded={configLoaded}
+          onNavigate={navigate}
           onCreated={(eventId, adminToken) => {
             navigate(`/event/${eventId}/admin?token=${adminToken}`);
           }}
@@ -59,8 +90,10 @@ export default function App() {
       const token = getSearchParams().get('token');
       return (
         <AdminDashboard
+          key={`${eventId}:${token || ''}`}
           eventId={eventId}
           adminToken={token}
+          allowImageUploads={appConfig.allowImageUploads}
           onNavigate={navigate}
         />
       );
@@ -75,8 +108,10 @@ export default function App() {
       }
       return (
         <ParticipantPortal
+          key={`${eventId}:${token || ''}`}
           eventId={eventId}
           token={token}
+          allowImageUploads={appConfig.allowImageUploads}
           onNavigate={navigate}
         />
       );
@@ -87,6 +122,7 @@ export default function App() {
       const eventId = joinMatch[1];
       return (
         <JoinEvent
+          key={eventId}
           eventId={eventId}
           onClaimed={(participantToken) => {
             navigate(`/event/${eventId}/me?token=${participantToken}`);
@@ -100,6 +136,7 @@ export default function App() {
 
     return (
       <HomeHero
+        allowEventCreation={appConfig.allowEventCreation}
         onCreateClick={() => navigate('/create')}
         onNavigate={navigate}
       />
@@ -109,7 +146,12 @@ export default function App() {
   return (
     <div className="app-container">
       <SnowEffect />
-      <Navbar onNavigate={navigate} appearance={appearance} onToggleAppearance={() => setAppearance(appearance === 'light' ? 'dark' : 'light')} />
+      <Navbar
+        allowEventCreation={appConfig.allowEventCreation}
+        onNavigate={navigate}
+        appearance={appearance}
+        onToggleAppearance={() => setAppearance(appearance === 'light' ? 'dark' : 'light')}
+      />
 
       <main className="main-content">
         {renderContent()}

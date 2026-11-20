@@ -168,6 +168,9 @@ Die Anwendung ist standardmäßig unter **http://localhost:3001** erreichbar. Ex
 |---|---|---|
 | `PORT` | `3001` lokal, `3000` im Docker-Image | Port des Express-Servers |
 | `DATA_DIR` | `./data` lokal, `/app/data` im Docker-Image | Verzeichnis für SQLite-Datenbank und Uploads |
+| `ALLOW_EVENT_CREATION` | `true` | Erlaubt (`true`) oder sperrt (`false`) das Erstellen neuer Wichtel-Aktionen für Besucher |
+| `CREATION_PASSWORD` | _(leer)_ | Optionales Passwort für das Erstellen neuer Aktionen (nur aktiv, wenn `ALLOW_EVENT_CREATION=true`) |
+| `ALLOW_IMAGE_UPLOADS` | `true` | Erlaubt (`true`) oder deaktiviert (`false`) das Hochladen eigener Banner und Profilfotos (Presets bleiben verfügbar) |
 
 Neue Installationen verwenden `wichtlag.sqlite`. Eine vorhandene `wichtelmat.sqlite` wird weiterhin verwendet, solange noch keine `wichtlag.sqlite` existiert. Uploads liegen im Unterverzeichnis `uploads`.
 
@@ -175,6 +178,7 @@ Neue Installationen verwenden `wichtlag.sqlite`. Eine vorhandene `wichtelmat.sql
 
 - Die API überträgt keine Auslosungs-Paarungen an den Adminbereich und keine persönlichen Teilnehmer-Links an die Organisation.
 - Zugangslinks enthalten geheime Token. Für öffentlichen Betrieb HTTPS verwenden und diese Links wie Passwörter behandeln.
+- Bei öffentlichen Instanzen lassen sich neue Aktionen über `ALLOW_EVENT_CREATION=false` sperren oder über `CREATION_PASSWORD` mit einem Passwort schützen. Bilduploads prüfen Dateityp-Signaturen (JPG, PNG, WebP, GIF), erfordern eine gültige Sitzung bzw. Berechtigung und können über `ALLOW_IMAGE_UPLOADS=false` vollständig abgeschaltet werden.
 - Die Daten liegen auf dem eigenen Server. Personen mit direktem Zugriff auf Server oder Datenbank können auf diese Daten zugreifen; die Geheimhaltung im Admin-Dashboard ersetzt keine Verschlüsselung gegenüber dem Betreiber.
 - Das Docker-Image läuft unter dem unprivilegierten Benutzer `node`. Die vorhandene Compose-Konfiguration setzt zusätzlich `no-new-privileges`.
 - Datenbankabfragen verwenden Prepared Statements; SQLite läuft mit WAL-Modus.

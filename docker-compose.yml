@@ -10,6 +10,10 @@ services:
       - "UMASK=${UMASK:-0022}"
       - "PORT=3000"
       - "DATA_DIR=/app/data"
+      # Optionale Zugriffssteuerung für Aktionserstellung und Uploads:
+      # - "ALLOW_EVENT_CREATION=true"
+      # - "CREATION_PASSWORD="
+      # - "ALLOW_IMAGE_UPLOADS=true"
     networks:
       - ${DOCKERNETWORK:-proxy}
     security_opt:

@@ -44,7 +44,18 @@ try {
   await context.addInitScript(() => localStorage.setItem('wichtlag_appearance', 'dark'));
   await context.route('**/api/**', async (route) => {
     const request = route.request();
-    if (request.method() !== 'GET' || !new URL(request.url()).pathname.startsWith('/api/events/demo2026')) {
+    const pathname = new URL(request.url()).pathname;
+    if (request.method() === 'GET' && pathname === '/api/config') {
+      await route.fulfill({
+        json: {
+          allowEventCreation: true,
+          creationPasswordRequired: false,
+          allowImageUploads: true
+        }
+      });
+      return;
+    }
+    if (request.method() !== 'GET' || !pathname.startsWith('/api/events/demo2026')) {
       await route.fulfill({ status: 405, json: { error: 'Screenshot-Modus: keine echten API-Aufrufe.' } });
       return;
     }
